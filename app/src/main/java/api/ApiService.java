@@ -3,8 +3,8 @@ package api;
 import retrofit2.Call;
 import retrofit2.http.POST;
 import retrofit2.http.Body;
-import com.example.Reaf_Service.VoiceData;
-import com.example.Reaf_Service.VoiceDataResponse;
+import com.example.leaf_Service.VoiceData;
+import com.example.leaf_Service.VoiceDataResponse;
 
 public interface ApiService {
     @POST("voiceData")
