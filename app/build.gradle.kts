@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.leaf_service"
+    namespace = "com.example.Reaf_service"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.leaf_service"
+        applicationId = "com.example.Reaf_service"
         minSdk = 24
         targetSdk = 33
         versionCode = 1

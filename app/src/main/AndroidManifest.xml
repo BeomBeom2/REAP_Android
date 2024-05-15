@@ -13,10 +13,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Leaf_service"
+        android:theme="@style/Theme.Reaf_service"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.Reaf_Service.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
