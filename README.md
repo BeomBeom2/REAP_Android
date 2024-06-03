@@ -1,2 +1,2 @@
-# Reaf_Service
+# REAP_android
 konkuk Univ. Graduation Project
