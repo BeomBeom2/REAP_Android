@@ -14,6 +14,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.media.MediaRecorder
 import com.example.Reaf_service.databinding.ActivityMainBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 private lateinit var binding: ActivityMainBinding
 
@@ -97,14 +100,41 @@ class MainActivity : AppCompatActivity() {
             binding.tvState.text = "에러 발생: $message"
         }
         // 인식 결과가 준비되면 호출
+
+        // 인식 결과가 준비되면 호출
         override fun onResults(results: Bundle) {
             // 말을 하면 ArrayList에 단어를 넣고 textView에 단어를 이어줌
             val matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             for (i in matches!!.indices) binding.textView.text = matches[i]
+
+            if (matches != null && matches.isNotEmpty()) {
+                val text = matches[0]
+                binding.textView.text = text
+
+                // 음성 인식 결과를 서버에 전송
+                val speechResult = SpeechResult(text)
+
+                RetrofitClient.instance.sendSpeechResult(text).enqueue(object : Callback<Void> {
+                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                        if (response.isSuccessful) {
+                            Toast.makeText(applicationContext, "저장 성공", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(applicationContext, "(서버접근성공)저장실패", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                        Toast.makeText(applicationContext, "(서버접근실패)저장실패: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
         }
         // 부분 인식 결과를 사용할 수 있을 때 호출
         override fun onPartialResults(partialResults: Bundle) {}
         // 향후 이벤트를 추가하기 위해 예약
         override fun onEvent(eventType: Int, params: Bundle) {}
     }
+
+    //음성 인식 결과 전송 테스트 코드
+
 }
