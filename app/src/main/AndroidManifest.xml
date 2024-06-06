@@ -19,7 +19,7 @@
         android:theme="@style/Theme.Leaf_service"
         tools:targetApi="31">
         <activity
-            android:name="com.example.leaf_Service.MainActivity"
+            android:name="com.example.Reaf_Service.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
