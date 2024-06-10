@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@android:color/transparent"/>
+
+    <stroke
+        android:width="2dp"
+    android:color="#9AEE66"/>
+    <solid android:color="@color/gray_F2F2F2"/>
+    <!-- 둥근 모서리 설정 -->
+    <corners android:radius="40dp"/>
+</shape>

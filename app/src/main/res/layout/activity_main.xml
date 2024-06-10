@@ -3,67 +3,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-
     android:layout_height="match_parent"
-    tools:context="com.example.Reaf_Service.MainActivity">
+    tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="아래 버튼을 눌러 음성인식 시작"
-        android:textSize="24sp"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_bnv_start"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.03"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_bnv_end"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.97"/>
+
+    <FrameLayout
+        android:id="@+id/main_frm"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
 
-    <Button
-        android:id="@+id/btnSpeech"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="말하기"
-        android:textSize="18sp"
-        android:backgroundTint="@color/purple_200"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
-
-
-    <TextView
-        android:id="@+id/tvState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="상태 체크"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/navigation"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:backgroundTint="@color/white"
+        android:outlineSpotShadowColor="@color/black"
+        app:menu="@menu/bottom_navigation_items"
+        app:itemActiveIndicatorStyle="@null"
+        app:itemBackground="@color/gray_1"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSpeech"
-        app:layout_constraintVertical_bias="0.275" />
-
-    <Button
-        android:id="@+id/btnRecord"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="녹음 시작"
-        android:textSize="18sp"
-        android:backgroundTint="@color/purple_200"
-        app:layout_constraintEnd_toStartOf="@+id/btnRecordSend"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvState"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <Button
-        android:id="@+id/btnRecordSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="녹음 보내기"
-        android:textSize="18sp"
-        android:backgroundTint="@color/purple_200"
-        app:layout_constraintStart_toEndOf="@id/btnRecord"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvState"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/gl_bnv_end"
+        app:layout_constraintStart_toStartOf="@+id/gl_bnv_start"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

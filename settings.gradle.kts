@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Reaf_Service"
+rootProject.name = "Reap_Service"
 include(":app")
