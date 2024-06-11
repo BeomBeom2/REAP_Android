@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.reap_service.databinding.ActivityMainBinding
 import com.example.reap_service.home.HomeFragment
 import com.example.reap_service.login.LoginActivity
-import com.example.reap_service.recording.Recording
 
 class MainActivity : AppCompatActivity(), ResetListener{
     private lateinit var binding : ActivityMainBinding
