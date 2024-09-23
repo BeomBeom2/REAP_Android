@@ -1,6 +1,12 @@
 pluginManagement {
     repositories {
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -10,9 +16,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven ("https://jitpack.io")
     }
 }
 
-rootProject.name = "Reaf_Service"
+rootProject.name = "REAP_Android"
 include(":app")
+include(":presentation")
+include(":data")
+include(":domain")

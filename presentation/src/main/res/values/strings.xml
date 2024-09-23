@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">REAP_Android</string>
+
+    <string name="search_title">검색</string>
+    <string name="home_title">홈</string>
+    <string name="mike_title">녹음</string>
+</resources>
