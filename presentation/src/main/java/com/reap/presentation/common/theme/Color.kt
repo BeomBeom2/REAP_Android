@@ -7,7 +7,9 @@ val Purple500 = Color(0xFF6200EE)
 val Purple700 = Color(0xFF3700B3)
 val Teal200 = Color(0xFF03DAC5)
 
-val SpeechRed = Color(0xFFC60404)
+val BackgroundGray = Color(0x80F5F5F5)
+
+val  SpeechRed = Color(0xFF00712D)
 
 val ShimmerColorShades = listOf(
     Color.LightGray.copy(0.9f),

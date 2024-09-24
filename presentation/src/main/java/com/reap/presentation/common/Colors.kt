@@ -3,7 +3,7 @@ package com.reap.presentation.common
 import androidx.compose.ui.graphics.Color
 
 object Colors {
-    val example1Selection = Color(0xFFFCCA3E)
+    val example1Selection = Color(0x669AEE66)
     val example1Bg = Color(0xFF3A284C)
     val example1BgLight = Color(0xFF433254)
     val example1BgSecondary = Color(0xFF51356E)

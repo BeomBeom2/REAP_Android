@@ -1,11 +1,12 @@
-package com.reap.presentation.ui.home
+package com.reap.presentation.ui.home.calendar
 
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,10 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +36,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kizitonwose.calendar.compose.CalendarState
@@ -44,22 +48,25 @@ import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.atStartOfMonth
 import com.kizitonwose.calendar.core.daysOfWeek
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
-import com.kizitonwose.calendar.core.yearMonth
+import com.kizitonwose.calendar.core.nextMonth
+import com.kizitonwose.calendar.core.previousMonth
 import com.reap.presentation.common.Colors
-import com.reap.presentation.ui.home.shared.displayText
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.Month
 import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun CalendarCustom() {
     val daysOfWeek = remember { daysOfWeek() }
     val currentDate = remember { LocalDate.now() }
     val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) } // Adjust as needed
-    val endMonth = remember { currentMonth.plusMonths(100) } // Adjust as needed
-    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() } // Available from the library
+    val startMonth = remember { currentMonth.minusMonths(100) }
+    val endMonth = remember { currentMonth.plusMonths(100) }
+    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
     val selections = remember { mutableStateListOf<LocalDate>() }
 
     val monthState = rememberCalendarState(
@@ -76,28 +83,39 @@ fun CalendarCustom() {
         firstDayOfWeek = daysOfWeek.first(),
     )
 
-    CalendarHeader(daysOfWeek = daysOfWeek)
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Column {
+            CalendarTitle(
+                monthState = monthState,
+                weekState = weekState,
+            )
 
-    HorizontalCalendar(
-        state = monthState,
-        dayContent = { day ->
-            val isSelectable = day.position == DayPosition.MonthDate
-            Day(
-                day.date,
-                isSelected = isSelectable && selections.contains(day.date),
-                isSelectable = isSelectable,
-            ) { clicked ->
-                if (selections.contains(clicked)) {
-                    selections.remove(clicked)
-                } else {
-                    selections.add(clicked)
-                }
-            }
-        },
-    )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CalendarHeader(daysOfWeek = daysOfWeek)
+            HorizontalCalendar(
+                state = monthState,
+                dayContent = { day ->
+                    val isSelectable = day.position == DayPosition.MonthDate
+                    Day(
+                        day.date,
+                        isSelected = isSelectable && selections.contains(day.date),
+                        isSelectable = isSelectable,
+                    ) { clicked ->
+                        if (selections.contains(clicked)) {
+                            selections.remove(clicked)
+                        } else {
+                            selections.add(clicked)
+                        }
+                    }
+                },
+            )
+        }
+    }
 }
-
-
 
 @Composable
 private fun CalendarTitle(
@@ -105,11 +123,9 @@ private fun CalendarTitle(
     weekState: WeekCalendarState,
 ) {
     val visibleMonth = rememberFirstVisibleMonthAfterScroll(monthState)
-    val visibleWeek = rememberFirstVisibleWeekAfterScroll(weekState)
     MonthAndWeekCalendarTitle(
         currentMonth = visibleMonth.yearMonth,
         monthState = monthState,
-        weekState = weekState,
     )
 }
 
@@ -118,7 +134,6 @@ private fun CalendarTitle(
 fun MonthAndWeekCalendarTitle(
     currentMonth: YearMonth,
     monthState: CalendarState,
-    weekState: WeekCalendarState,
 ) {
     val coroutineScope = rememberCoroutineScope()
     SimpleCalendarTitle(
@@ -126,23 +141,19 @@ fun MonthAndWeekCalendarTitle(
         currentMonth = currentMonth,
         goToPrevious = {
             coroutineScope.launch {
-                    val targetMonth = monthState.firstVisibleMonth.yearMonth.previous
+                    val targetMonth = monthState.firstVisibleMonth.yearMonth.previousMonth
                     monthState.animateScrollToMonth(targetMonth)
             }
         },
 
         goToNext = {
-            Log.e("asd", "ㅁㄴㅇ")
             coroutineScope.launch {
-                    val targetMonth = monthState.firstVisibleMonth.yearMonth.next
+                    val targetMonth = monthState.firstVisibleMonth.yearMonth.nextMonth
                     monthState.animateScrollToMonth(targetMonth)
             }
         },
     )
 }
-
-val YearMonth.next: YearMonth get() = this.plus(1, DateTimeUnit.MONTH)
-val YearMonth.previous: YearMonth get() = this.minus(1, DateTimeUnit.MONTH)
 
 @Composable
 fun SimpleCalendarTitle(
@@ -156,20 +167,21 @@ fun SimpleCalendarTitle(
         modifier = modifier.height(40.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Text(
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .weight(1f)
+                .testTag("MonthTitle"),
+            text = currentMonth.displayText(),
+            fontSize = 18.sp,
+            textAlign = TextAlign.Left,
+            fontWeight = FontWeight.Medium,
+        )
         CalendarNavigationIcon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
             contentDescription = "Previous",
             onClick = goToPrevious,
             isHorizontal = isHorizontal,
-        )
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .testTag("MonthTitle"),
-            text = currentMonth.displayText(),
-            fontSize = 22.sp,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Medium,
         )
         CalendarNavigationIcon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -223,6 +235,22 @@ fun CalendarHeader(daysOfWeek: List<DayOfWeek>) {
     }
 }
 
+fun YearMonth.displayText(short: Boolean = false): String {
+    return "${this.year}년 ${this.month.displayText()}"
+}
+
+fun Month.displayText( ): String {
+    val monthNames = listOf("1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월")
+
+    return monthNames[this.ordinal]
+}
+
+fun DayOfWeek.displayText(): String {
+    val dayNames = listOf("월", "화", "수", "목", "금", "토", "일")
+
+    return dayNames[this.ordinal]
+}
+
 @Composable
 fun Day(
     day: LocalDate,
@@ -244,7 +272,7 @@ fun Day(
         contentAlignment = Alignment.Center,
     ) {
         val textColor = when {
-            isSelected -> Color.White
+            isSelected -> Color.Black
             isSelectable -> Color.Unspecified
             else -> Colors.example4GrayPast
         }
@@ -255,3 +283,11 @@ fun Day(
         )
     }
 }
+
+
+@Preview
+@Composable
+private fun calendarCustom() {
+    CalendarCustom()
+}
+

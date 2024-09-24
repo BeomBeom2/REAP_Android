@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            REAPComposableTheme(darkTheme = true) {
+            REAPComposableTheme(darkTheme = false) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     MainScreen()
                 }

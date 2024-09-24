@@ -9,4 +9,14 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="inactive_text_color">#BEBEBE</color>
+
+    <!-- 시멘트 -->
+    <color name="cement_1">#FFFFFF</color>
+    <color name="cement_2">#EAEAEA</color>
+    <color name="cement_3">#E0E0E0</color>
+    <color name="cement_4">#AAAAAA</color>
+    <color name="cement_5">#666666</color>
+    <color name="cement_6">#323232</color>
+    <color name="cement_7">#7C7C7C</color>
+
 </resources>

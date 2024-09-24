@@ -1,42 +1,67 @@
 package com.reap.presentation.ui.home
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.reap.presentation.ui.login.LoginViewModel
+import com.reap.presentation.ui.home.calendar.CalendarCustom
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    events: List<String>) {
+     ) {
     Home(
         viewModel = hiltViewModel(),
-        events,
         )
 }
-
-
 @Composable
 internal fun Home(
     viewModel: HomeViewModel,
-    events: List<String>
-){
-    Surface(color = Color.White) {
-        Column {
-            CalendarCustom()
-            LazyColumn {
-                items(events.size) { index ->
-                    Text(events[index], modifier = Modifier.padding(8.dp))
-                }
-            }
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val sidePadding = screenWidth * 0.05f
+    val scrollState = rememberScrollState()
+
+    Surface(color = com.reap.presentation.common.theme.BackgroundGray) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = sidePadding)
+                .verticalScroll(scrollState)
+        ) {
+                CalendarCustom()
+
+            Text(
+                modifier = Modifier
+                    .padding(bottom = 10.dp, top = 30.dp ),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                text ="최근 녹음")
+
+                RecordingsList()
         }
     }
+}
+
+
+
+@Preview
+@Composable
+private fun HomeScreen() {
+    Home(
+        viewModel = hiltViewModel(),
+    )
 }

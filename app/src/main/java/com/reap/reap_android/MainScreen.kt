@@ -100,7 +100,7 @@ fun NavGraphBuilder.homeScreen(
     ) {
         bottomBarState.value = true
 
-        HomeScreen (navController, emptyList())
+        HomeScreen (navController )
     }
 }
 
@@ -122,8 +122,8 @@ fun BottomNavigationBar(modifier: Modifier, navController: NavController) {
                 )
                 clip = true
             },
-        containerColor = colorResource(id = com.reap.presentation.R.color.black),
-        contentColor = Color.White
+        containerColor = colorResource(id = com.reap.presentation.R.color.cement_2),
+        contentColor = Color.Black
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -134,8 +134,8 @@ fun BottomNavigationBar(modifier: Modifier, navController: NavController) {
                     selectedIconColor = SpeechRed,
                     selectedTextColor = SpeechRed,
                     indicatorColor = Color.Transparent,
-                    unselectedIconColor = Color.White.copy(0.4f),
-                    unselectedTextColor = Color.White.copy(0.4f),
+                    unselectedIconColor = Color.Black,
+                    unselectedTextColor = Color.Black,
                 ),
                 label = { Text(text = item.route) },
                 alwaysShowLabel = true,
