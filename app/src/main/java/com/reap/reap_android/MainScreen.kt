@@ -1,9 +1,19 @@
 package com.reap.reap_android.ui.main
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -11,12 +21,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -35,6 +47,8 @@ import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.home.HomeScreen
+import com.reap.presentation.ui.home.calendar.clickable
+
 /**
  * Created by Beom_2 on 21.September.2024
  */
@@ -48,16 +62,26 @@ fun SettingUpBottomNavigationBarAndCollapsing() {
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = rememberNavController()
     val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
+    val showBottomSheet = remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = Modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (bottomBarState.value) {
-                BottomNavigationBar(modifier = Modifier.padding(0.dp), navController)
+                BottomNavigationBar(
+                    modifier = Modifier.padding(0.dp),
+                    navController = navController,
+                    onRecordClick = { showBottomSheet.value = true }
+                )
             }
         }
     ) { paddingValues ->
         MainScreenNavigationConfigurations(navController, paddingValues, bottomBarState)
+    }
+
+    if (showBottomSheet.value) {
+        RecordBottomSheet(onDismiss = { showBottomSheet.value = false })
     }
 }
 
@@ -65,7 +89,8 @@ fun SettingUpBottomNavigationBarAndCollapsing() {
 private fun MainScreenNavigationConfigurations(
     navController: NavHostController,
     paddingValues: PaddingValues,
-    bottomBarState: MutableState<Boolean> ) {
+    bottomBarState: MutableState<Boolean>
+) {
     NavHost(
         modifier = Modifier.padding(paddingValues),
         navController = navController,
@@ -73,6 +98,7 @@ private fun MainScreenNavigationConfigurations(
     ) {
         loginScreen(navController, bottomBarState)
         homeScreen(navController, bottomBarState)
+
     }
 }
 
@@ -85,9 +111,7 @@ fun NavGraphBuilder.loginScreen(
     ) {
         bottomBarState.value = false
 
-        LoginScreen {
-            navController.navigate(NavRoutes.Home.route)
-        }
+        LoginScreen(navController)
     }
 }
 
@@ -99,18 +123,19 @@ fun NavGraphBuilder.homeScreen(
         route = NavRoutes.Home.route
     ) {
         bottomBarState.value = true
-
-        HomeScreen (navController )
+        HomeScreen(navController)
     }
 }
 
-
-
 @Composable
-fun BottomNavigationBar(modifier: Modifier, navController: NavController) {
+fun BottomNavigationBar(
+    modifier: Modifier,
+    navController: NavController,
+    onRecordClick: () -> Unit
+) {
     val bottomNavigationItems = listOf(
         BottomBarItem.Home,
-        BottomBarItem.Mike,
+        BottomBarItem.Record,
         BottomBarItem.Search
     )
     NavigationBar(
@@ -141,40 +166,78 @@ fun BottomNavigationBar(modifier: Modifier, navController: NavController) {
                 alwaysShowLabel = true,
                 selected = currentRoute == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        // Pop up to the start destination of the graph to
-                        // avoid building up a large stack of destinations
-                        // on the back stack as users select items
-                        navController.graph.startDestinationRoute?.let { route ->
-                            popUpTo(route) {
-                                saveState = true
+                    if (item.route == "Record") {
+                        onRecordClick()
+                    } else {
+                        navController.navigate(item.route) {
+                            navController.graph.startDestinationRoute?.let { route ->
+                                popUpTo(route) {
+                                    saveState = true
+                                }
                             }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-
-                        /**
-                         * As per https://developer.android.com/jetpack/compose/navigation#bottom-nav
-                         * By using the saveState and restoreState flags,
-                         * the state and back stack of that item is correctly saved
-                         * and restored as you swap between bottom navigation items.
-                         */
-
-                        /**
-                         * As per https://developer.android.com/jetpack/compose/navigation#bottom-nav
-                         * By using the saveState and restoreState flags,
-                         * the state and back stack of that item is correctly saved
-                         * and restored as you swap between bottom navigation items.
-                         */
-
-                        // Avoid multiple copies of the same destination when
-                        // reselecting the same item
-                        launchSingleTop = true
-
-                        // Restore state when reselecting a previously selected item
-                        restoreState = true
-
                     }
                 }
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecordBottomSheet(onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "새로 만들기",
+                style = MaterialTheme.typography.displayMedium,
+                modifier = Modifier.padding(bottom = 18.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(id = com.reap.presentation.R.drawable.ic_mike),
+                        contentDescription = "녹음",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { /* 녹음 기능 구현 */ }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("녹음", style = MaterialTheme.typography.bodyMedium)
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(id = com.reap.presentation.R.drawable.ic_upload),
+                        contentDescription = "업로드",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { /* 업로드 기능 구현 */ }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("업로드", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
     }
 }
