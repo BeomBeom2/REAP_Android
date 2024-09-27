@@ -1,10 +1,17 @@
 package com.reap.reap_android.ui.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +43,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -48,19 +57,39 @@ import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
+import com.reap.presentation.ui.splash.SplashScreen
 
 /**
  * Created by Beom_2 on 21.September.2024
  */
 @Composable
 fun MainScreen() {
-    SettingUpBottomNavigationBarAndCollapsing()
+    val navController = rememberNavController()
+    var showSplashScreen by remember { mutableStateOf(true) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = showSplashScreen,
+            enter = fadeIn(),
+            exit = fadeOut(animationSpec = tween(durationMillis = 1000)),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SplashScreen(onSplashComplete = { showSplashScreen = false })
+        }
+
+        AnimatedVisibility(
+            visible = !showSplashScreen,
+            enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SettingUpBottomNavigationBarAndCollapsing(navController)
+        }
+    }
 }
 
 @Composable
-fun SettingUpBottomNavigationBarAndCollapsing() {
+fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = rememberNavController()
     val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
     val showBottomSheet = remember { mutableStateOf(false) }
 
@@ -98,7 +127,6 @@ private fun MainScreenNavigationConfigurations(
     ) {
         loginScreen(navController, bottomBarState)
         homeScreen(navController, bottomBarState)
-
     }
 }
 
@@ -197,12 +225,13 @@ fun RecordBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 "새로 만들기",
                 style = MaterialTheme.typography.displayMedium,
+                fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 18.dp)
             )
 
@@ -217,7 +246,11 @@ fun RecordBottomSheet(onDismiss: () -> Unit) {
                         painter = painterResource(id = com.reap.presentation.R.drawable.ic_mike),
                         contentDescription = "녹음",
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(56.dp)
+                            .background(
+                                color = colorResource(id = com.reap.presentation.R.color.cement_2),
+                                shape = RoundedCornerShape(24.dp) // 반원 형태
+                            )
                             .clickable { /* 녹음 기능 구현 */ }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -231,7 +264,11 @@ fun RecordBottomSheet(onDismiss: () -> Unit) {
                         painter = painterResource(id = com.reap.presentation.R.drawable.ic_upload),
                         contentDescription = "업로드",
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(56.dp)
+                            .background(
+                                color = colorResource(id = com.reap.presentation.R.color.cement_2),
+                                shape = RoundedCornerShape(24.dp) // 반원 형태
+                            )
                             .clickable { /* 업로드 기능 구현 */ }
                     )
                     Spacer(modifier = Modifier.height(8.dp))

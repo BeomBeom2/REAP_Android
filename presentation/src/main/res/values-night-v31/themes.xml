@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.REAP_Android" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
@@ -11,7 +12,10 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
 
-        <item name="android:windowIsTranslucent">true</item>
+        <!-- Splash Screen Customization -->
+        <item name="android:windowIsTranslucent">true</item> // 코드 추가
+
         <!-- Customize your theme here. -->
     </style>
+
 </resources>
