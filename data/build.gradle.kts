@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.runtime)
+    implementation(project(":domain"))
 
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.android)

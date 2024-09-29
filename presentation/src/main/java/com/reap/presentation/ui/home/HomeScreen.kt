@@ -42,7 +42,9 @@ internal fun Home(
                 .padding(horizontal = sidePadding)
                 .verticalScroll(scrollState)
         ) {
-                CalendarCustom()
+            UserLabel("Reap", "Reap@Kakao.com")
+
+            CalendarCustom()
 
             Text(
                 modifier = Modifier

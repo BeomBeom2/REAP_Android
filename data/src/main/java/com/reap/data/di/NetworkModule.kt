@@ -1,6 +1,7 @@
 package com.reap.data.di
 
 import android.content.Context
+import com.reap.data.remote.MainApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,9 +45,15 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://3.35.154.191:8080/")
+            .baseUrl("http://52.78.97.174:8080/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDetailApi(retrofit: Retrofit): MainApi {
+        return retrofit.create(MainApi::class.java)
     }
 }

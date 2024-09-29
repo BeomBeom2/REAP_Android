@@ -80,4 +80,10 @@ dependencies {
 
     implementation(libs.calendar.compose)
     implementation(libs.calendar.view)
+
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.urlconnection)
 }

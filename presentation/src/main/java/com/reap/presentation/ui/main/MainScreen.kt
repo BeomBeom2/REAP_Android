@@ -1,5 +1,11 @@
 package com.reap.reap_android.ui.main
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -17,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,10 +48,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -57,6 +67,8 @@ import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
+import com.reap.presentation.ui.main.MainViewModel
+import com.reap.presentation.ui.main.UploadStatus
 import com.reap.presentation.ui.splash.SplashScreen
 
 /**
@@ -64,6 +76,7 @@ import com.reap.presentation.ui.splash.SplashScreen
  */
 @Composable
 fun MainScreen() {
+    val mainViewModel: MainViewModel = hiltViewModel()
     val navController = rememberNavController()
     var showSplashScreen by remember { mutableStateOf(true) }
 
@@ -82,13 +95,13 @@ fun MainScreen() {
             enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
             modifier = Modifier.fillMaxSize()
         ) {
-            SettingUpBottomNavigationBarAndCollapsing(navController)
+            SettingUpBottomNavigationBarAndCollapsing(navController, mainViewModel)
         }
     }
 }
 
 @Composable
-fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController) {
+fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, mainViewModel: MainViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
     val showBottomSheet = remember { mutableStateOf(false) }
@@ -110,7 +123,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController) 
     }
 
     if (showBottomSheet.value) {
-        RecordBottomSheet(onDismiss = { showBottomSheet.value = false })
+        RecordBottomSheet(onDismiss = { showBottomSheet.value = false }, mainViewModel)
     }
 }
 
@@ -215,8 +228,24 @@ fun BottomNavigationBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordBottomSheet(onDismiss: () -> Unit) {
+fun RecordBottomSheet(onDismiss: () -> Unit, mainViewModel: MainViewModel) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            if (isValidAudioFile(context, it)) {
+                mainViewModel.selectAudioFile(it)
+                mainViewModel.uploadAudioFile()
+            } else {
+                // 유효하지 않은 파일 형식일 경우 사용자에게 알림
+                Toast.makeText(context, "유효하지 않은 오디오 파일입니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val uploadStatus by mainViewModel.uploadStatus.collectAsState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -267,14 +296,46 @@ fun RecordBottomSheet(onDismiss: () -> Unit) {
                             .size(56.dp)
                             .background(
                                 color = colorResource(id = com.reap.presentation.R.color.cement_2),
-                                shape = RoundedCornerShape(24.dp) // 반원 형태
+                                shape = RoundedCornerShape(24.dp)
                             )
-                            .clickable { /* 업로드 기능 구현 */ }
+                            .clickable { launcher.launch("audio/*") }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("업로드", style = MaterialTheme.typography.bodyMedium)
                 }
             }
+
+            when (uploadStatus) {
+                is UploadStatus.Uploading -> CircularProgressIndicator()
+                is UploadStatus.Success -> Text("업로드 성공! 파일 ID: ${(uploadStatus as UploadStatus.Success).fileId}")
+                is UploadStatus.Error -> {
+                    Text("업로드 실패: ${(uploadStatus as UploadStatus.Error).message}")
+                    Log.e("Main", "${(uploadStatus as UploadStatus.Error).message}")
+                }
+                else -> {}
+            }
         }
     }
+}
+
+fun isValidAudioFile(context: Context, uri: Uri): Boolean {
+    val contentResolver = context.contentResolver
+    val mimeType = contentResolver.getType(uri)
+
+    // MIME 타입 검사를 보다 세부적으로 조정
+    if (mimeType == null || !(mimeType.startsWith("audio/") || mimeType == "audio/mp4" || mimeType == "audio/x-m4a")) {
+        return false
+    }
+
+
+    // 파일 크기 검사 (예: 최대 10MB)
+    val fileSize = contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0
+    if (fileSize > 50 * 1024 * 1024) { // 50MB
+        return false
+    }
+
+    // 추가적인 안전성 검사를 여기에 구현할 수 있습니다.
+    // 예: 파일 헤더 검사, 악성코드 스캔 등
+
+    return true
 }
