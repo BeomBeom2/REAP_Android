@@ -119,7 +119,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
             }
         }
     ) { paddingValues ->
-        MainScreenNavigationConfigurations(navController, paddingValues, bottomBarState)
+        MainScreenNavigationConfigurations(navController, paddingValues, bottomBarState, mainViewModel)
     }
 
     if (showBottomSheet.value) {
@@ -131,7 +131,8 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
 private fun MainScreenNavigationConfigurations(
     navController: NavHostController,
     paddingValues: PaddingValues,
-    bottomBarState: MutableState<Boolean>
+    bottomBarState: MutableState<Boolean>,
+    mainViewModel: MainViewModel
 ) {
     NavHost(
         modifier = Modifier.padding(paddingValues),
@@ -139,7 +140,7 @@ private fun MainScreenNavigationConfigurations(
         startDestination = NavRoutes.Login.route
     ) {
         loginScreen(navController, bottomBarState)
-        homeScreen(navController, bottomBarState)
+        homeScreen(navController, bottomBarState, mainViewModel)
     }
 }
 
@@ -158,13 +159,15 @@ fun NavGraphBuilder.loginScreen(
 
 fun NavGraphBuilder.homeScreen(
     navController: NavController,
-    bottomBarState: MutableState<Boolean>
+    bottomBarState: MutableState<Boolean>,
+    mainViewModel: MainViewModel
 ) {
     composable(
         route = NavRoutes.Home.route
     ) {
         bottomBarState.value = true
-        HomeScreen(navController)
+
+        HomeScreen(navController, mainViewModel)
     }
 }
 

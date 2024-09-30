@@ -9,7 +9,7 @@ import javax.inject.Singleton
 class PostRecognizeUrlUseCase @Inject constructor(
     private val mainRepository : MainRepository
 ) {
-    suspend operator fun invoke(user: String, language: String, media: MultipartBody.Part) : String {
-        return mainRepository.postRecognizeUrl(user, language, media)
+    suspend operator fun invoke(user: String, media: MultipartBody.Part) : String {
+        return mainRepository.postRecognizeUrl(user, media)
     }
 }

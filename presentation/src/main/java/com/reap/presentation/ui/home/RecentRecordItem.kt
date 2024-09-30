@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reap.domain.model.RecentRecording
+import com.reap.domain.model.RecentlyRecording
 
 // 샘플 데이터
 val recordings = listOf(
@@ -24,7 +25,7 @@ val recordings = listOf(
 )
 
 @Composable
-fun RecordingsList() {
+fun RecordingsList(recordings: List<RecentlyRecording>) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -35,7 +36,7 @@ fun RecordingsList() {
 }
 
 @Composable
-fun RecordingItem(recording: RecentRecording) {
+fun RecordingItem(recording: RecentlyRecording) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,7 +46,7 @@ fun RecordingItem(recording: RecentRecording) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "녹음 이름: ${recording.name}",
+                text = "녹음 이름: ${recording.fileName}",
                 fontSize = 16.sp,
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
@@ -60,7 +61,7 @@ fun RecordingItem(recording: RecentRecording) {
                 maxLines = 1
             )
             Text(
-                text = "녹음 날짜: ${recording.date}",
+                text = "녹음 날짜: ${recording.recordedDate}",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 style = MaterialTheme.typography.bodyMedium,

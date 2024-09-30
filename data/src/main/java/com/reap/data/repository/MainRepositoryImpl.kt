@@ -10,9 +10,9 @@ import javax.inject.Inject
 class MainRepositoryImpl @Inject constructor(
     private val mainApi : MainApi
 ) : MainRepository {
-    override suspend fun postRecognizeUrl(user: String, language: String, media: MultipartBody.Part): String {
+    override suspend fun postRecognizeUrl(user: String, media: MultipartBody.Part): String {
         val userRequestBody = user.toRequestBody("text/plain".toMediaTypeOrNull())
-        val languageRequestBody = language.toRequestBody("text/plain".toMediaTypeOrNull())
-        return mainApi.postRecognizeUrl(userRequestBody, languageRequestBody, media)
+        val response = mainApi.postRecognizeUrl(userRequestBody, media)
+        return response.s3Url
     }
 }

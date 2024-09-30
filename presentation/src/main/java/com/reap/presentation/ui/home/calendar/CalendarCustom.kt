@@ -1,5 +1,6 @@
 package com.reap.presentation.ui.home.calendar
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,10 +23,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +39,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kizitonwose.calendar.compose.CalendarState
@@ -50,24 +52,53 @@ import com.kizitonwose.calendar.core.daysOfWeek
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.core.nextMonth
 import com.kizitonwose.calendar.core.previousMonth
+import com.reap.domain.model.RecentlyRecording
 import com.reap.presentation.common.Colors
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
 import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Composable
-fun CalendarCustom() {
+fun CalendarCustom(recordings: List<RecentlyRecording>) {
     val daysOfWeek = remember { daysOfWeek() }
     val currentDate = remember { LocalDate.now() }
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
-    val selections = remember { mutableStateListOf<LocalDate>() }
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    // recordings 리스트의 내용을 로깅
+    LaunchedEffect(recordings) {
+        Log.d("CalendarCustom", "Recordings: ${recordings.joinToString { it.recordedDate }}")
+    }
+
+    // selections를 상태로 관리
+    var selections by remember { mutableStateOf(listOf<LocalDate>()) }
+
+    // recordings가 변경될 때 selections 업데이트
+    LaunchedEffect(recordings) {
+        selections = recordings.mapNotNull { recording ->
+            try {
+                // recordedDate 문자열을 LocalDate로 파싱
+                LocalDate.parse(recording.recordedDate, dateFormatter)
+            } catch (e: DateTimeParseException) {
+                Log.e("CalendarCustom", "Failed to parse date: ${recording.recordedDate}", e)
+                null
+            }
+        }
+
+        // 선택된 날짜들을 로그로 출력
+        if (selections.isEmpty()) {
+            Log.d("CalendarCustom", "No dates selected. Selections is empty.")
+        } else {
+            Log.d("CalendarCustom", "Selected dates: ${selections.joinToString()}")
+        }
+    }
+
 
     val monthState = rememberCalendarState(
         startMonth = startMonth,
@@ -105,10 +136,11 @@ fun CalendarCustom() {
                         isSelected = isSelectable && selections.contains(day.date),
                         isSelectable = isSelectable,
                     ) { clicked ->
+                        // 클릭한 날짜가 이미 selections에 있으면 제거, 없으면 추가
                         if (selections.contains(clicked)) {
-                            selections.remove(clicked)
+                            selections = selections.filter { it != clicked }
                         } else {
-                            selections.add(clicked)
+                            selections = selections + clicked
                         }
                     }
                 },
@@ -285,9 +317,9 @@ fun Day(
 }
 
 
-@Preview
-@Composable
-private fun calendarCustom() {
-    CalendarCustom()
-}
+//@Preview
+//@Composable
+//private fun calendarCustom() {
+//    CalendarCustom()
+//}
 

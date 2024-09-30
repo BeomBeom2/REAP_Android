@@ -1,5 +1,6 @@
 package com.reap.data.remote
 
+import com.reap.domain.model.RecognizeResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Multipart
@@ -11,7 +12,6 @@ interface MainApi {
     @POST("/recognize-url")
     suspend fun postRecognizeUrl(
         @Part("user") user: RequestBody,
-        @Part("language") language: RequestBody,
         @Part media: MultipartBody.Part
-    ): String
+    ): RecognizeResponse
 }

@@ -1,8 +1,10 @@
 package com.reap.presentation.ui.main
 
 import android.app.Application
+import android.content.ContentResolver
 import android.webkit.MimeTypeMap
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,6 +35,9 @@ class MainViewModel @Inject constructor(
     private val _audioFileId = MutableStateFlow<String?>(null)
     val audioFileId: StateFlow<String?> = _audioFileId.asStateFlow()
 
+    private val _onUploadSuccess = MutableStateFlow(false)
+    val onUploadSuccess = _onUploadSuccess.asStateFlow()
+
     fun selectAudioFile(uri: Uri) {
         _selectedAudioFile.value = uri
     }
@@ -42,11 +47,14 @@ class MainViewModel @Inject constructor(
             _uploadStatus.value = UploadStatus.Uploading
             try {
                 val mediaPart = prepareFilePart(_selectedAudioFile.value!!)
-                val fileId = postRecognizeUrlUseCase.invoke("JJB", "ko-KR", mediaPart)
+                val fileId = postRecognizeUrlUseCase.invoke("test1",  mediaPart)
                 //Log.d("MainViewModel", fileId)
 
                 _audioFileId.value = fileId
                 _uploadStatus.value = UploadStatus.Success(fileId)
+
+
+                _onUploadSuccess.value = true
             } catch (e: Exception) {
                 _uploadStatus.value = UploadStatus.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
             }
@@ -57,31 +65,47 @@ class MainViewModel @Inject constructor(
         val contentResolver = context.contentResolver
         val fileInputStream = contentResolver.openInputStream(fileUri)
 
-        // MIME 타입으로부터 파일 확장자 추출
-        val mimeType = contentResolver.getType(fileUri)
-        var extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+        // 원본 파일 이름 가져오기
+        val originalFileName = getOriginalFileName(contentResolver, fileUri)
 
-        // 일부 알려진 MIME 타입에 대해 수동 설정
-        if (mimeType == "audio/x-m4a") {
-            extension = "m4a"
+        // MIME 타입 가져오기
+        val mimeType = contentResolver.getType(fileUri)
+
+        // MIME 타입에 따른 확장자 추출
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "unknown"
+
+        // 파일 이름에 확장자 추가
+        val filenameWithExtension = if (originalFileName.contains('.')) {
+            originalFileName // 이미 확장자가 있는 경우 그대로 사용
+        } else {
+            "$originalFileName.$extension" // 확장자를 추가
         }
 
-        // 파일 이름 설정 (확장자 포함)
-        val filename = fileUri.lastPathSegment?.let {
-            if (extension != null && it.contains('.').not()) it + ".$extension" else it
-        } ?: "tempFile.$extension"
+        Log.d("MainViewModel", "Filename: $filenameWithExtension, MIME Type: $mimeType")
 
-        Log.d("MainViewModel", "Filename: $filename, Extension: $extension")
+        // 임시 파일 생성
+        val tempFile = File(context.cacheDir, filenameWithExtension)
+        val fileOutputStream = FileOutputStream(tempFile)
 
-        val file = File(context.cacheDir, filename)
-        val fileOutputStream = FileOutputStream(file)
+        fileInputStream?.use { input ->
+            fileOutputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
 
-        fileInputStream?.copyTo(fileOutputStream)
-        fileInputStream?.close()
-        fileOutputStream.close()
+        val requestFile = tempFile.asRequestBody(mimeType?.toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData("media", filenameWithExtension, requestFile)
+    }
 
-        val requestFile = file.asRequestBody(mimeType?.toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData("media", file.name, requestFile)
+    private fun getOriginalFileName(contentResolver: ContentResolver, fileUri: Uri): String {
+        var fileName = "unknown_file"
+        contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (cursor.moveToFirst() && nameIndex != -1) {
+                fileName = cursor.getString(nameIndex)
+            }
+        }
+        return fileName
     }
 }
 
