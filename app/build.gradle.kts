@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.core)
+    implementation(libs.accompanist.permissions)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(libs.androidx.activity.compose)

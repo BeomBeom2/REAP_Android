@@ -64,11 +64,12 @@ import androidx.navigation.compose.rememberNavController
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
-import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
+import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.main.MainViewModel
 import com.reap.presentation.ui.main.UploadStatus
+import com.reap.presentation.ui.record.RecordScreen
 import com.reap.presentation.ui.splash.SplashScreen
 
 /**
@@ -123,7 +124,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
     }
 
     if (showBottomSheet.value) {
-        RecordBottomSheet(onDismiss = { showBottomSheet.value = false }, mainViewModel)
+        RecordBottomSheet(navController, onDismiss = { showBottomSheet.value = false }, mainViewModel)
     }
 }
 
@@ -141,6 +142,7 @@ private fun MainScreenNavigationConfigurations(
     ) {
         loginScreen(navController, bottomBarState)
         homeScreen(navController, bottomBarState, mainViewModel)
+        recordScreen(navController, bottomBarState)
     }
 }
 
@@ -157,6 +159,20 @@ fun NavGraphBuilder.loginScreen(
     }
 }
 
+fun NavGraphBuilder.recordScreen(
+    navController: NavController,
+    bottomBarState: MutableState<Boolean>
+) {
+    composable(
+        route = NavRoutes.Record.route
+    ) {
+        bottomBarState.value = false
+
+        RecordScreen(navController, LocalContext.current)
+    }
+}
+
+
 fun NavGraphBuilder.homeScreen(
     navController: NavController,
     bottomBarState: MutableState<Boolean>,
@@ -170,6 +186,7 @@ fun NavGraphBuilder.homeScreen(
         HomeScreen(navController, mainViewModel)
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(
@@ -231,7 +248,7 @@ fun BottomNavigationBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordBottomSheet(onDismiss: () -> Unit, mainViewModel: MainViewModel) {
+fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, mainViewModel: MainViewModel) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     val launcher = rememberLauncherForActivityResult(
@@ -240,7 +257,6 @@ fun RecordBottomSheet(onDismiss: () -> Unit, mainViewModel: MainViewModel) {
         uri?.let {
             if (isValidAudioFile(context, it)) {
                 mainViewModel.selectAudioFile(it)
-                mainViewModel.uploadAudioFile()
             } else {
                 // 유효하지 않은 파일 형식일 경우 사용자에게 알림
                 Toast.makeText(context, "유효하지 않은 오디오 파일입니다.", Toast.LENGTH_SHORT).show()
@@ -283,7 +299,10 @@ fun RecordBottomSheet(onDismiss: () -> Unit, mainViewModel: MainViewModel) {
                                 color = colorResource(id = com.reap.presentation.R.color.cement_2),
                                 shape = RoundedCornerShape(24.dp) // 반원 형태
                             )
-                            .clickable { /* 녹음 기능 구현 */ }
+                            .clickable {
+                                navController.navigate(NavRoutes.Record.route) {  }
+                                onDismiss()
+                                }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("녹음", style = MaterialTheme.typography.bodyMedium)

@@ -13,16 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.reap.domain.model.RecentRecording
 import com.reap.domain.model.RecentlyRecording
-
-// 샘플 데이터
-val recordings = listOf(
-    RecentRecording("녹음 1111111111111111111111111111111111111111111111", "대화", "2024-09-23"),
-    RecentRecording("녹음 2", "회의", "2024-09-24"),
-    RecentRecording("녹음 3", "강의", "2024-09-25"),
-    RecentRecording("녹음 4", "전화 통화", "2024-09-26")
-)
 
 @Composable
 fun RecordingsList(recordings: List<RecentlyRecording>) {

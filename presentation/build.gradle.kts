@@ -54,7 +54,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.material)
+
+
+    implementation(libs.accompanist.permissions)
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)

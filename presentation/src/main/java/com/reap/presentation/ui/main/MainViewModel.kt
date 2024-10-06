@@ -42,24 +42,20 @@ class MainViewModel @Inject constructor(
         _selectedAudioFile.value = uri
     }
 
-    fun uploadAudioFile() {
+    fun uploadAudioFile(uri: Uri) {
         viewModelScope.launch {
             _uploadStatus.value = UploadStatus.Uploading
             try {
-                val mediaPart = prepareFilePart(_selectedAudioFile.value!!)
-                val fileId = postRecognizeUrlUseCase.invoke("test1",  mediaPart)
-                //Log.d("MainViewModel", fileId)
-
+                val mediaPart = prepareFilePart(uri)
+                val fileId = postRecognizeUrlUseCase.invoke("JJB", mediaPart)
                 _audioFileId.value = fileId
                 _uploadStatus.value = UploadStatus.Success(fileId)
-
-
-                _onUploadSuccess.value = true
             } catch (e: Exception) {
-                _uploadStatus.value = UploadStatus.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                _uploadStatus.value = UploadStatus.Error(e.message ?: "An unknown error occurred.")
             }
         }
     }
+
     private fun prepareFilePart(fileUri: Uri): MultipartBody.Part {
         val context = getApplication<Application>()
         val contentResolver = context.contentResolver
