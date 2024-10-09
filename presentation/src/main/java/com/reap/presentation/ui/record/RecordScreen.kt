@@ -5,24 +5,35 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -61,31 +72,98 @@ internal fun Record(
     viewModel: RecordViewModel
 ) {
     val isRecording by viewModel.isRecording.collectAsState()  // StateFlow를 collectAsState로 수집
+    val recordingTime by viewModel.recordingTime.collectAsState()
+    val volumeLevels by viewModel.volumeLevels.collectAsState()
 
     Column(
-        modifier = Modifier.padding(4.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1E1E1E))
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(40.dp))
         Text(
-            text = if (isRecording) "Recording..." else "Tap mic to start recording",
-            style = MaterialTheme.typography.titleMedium
+            text = "🚨 유의사항",
+            color = Color.Yellow,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF333333), shape = RoundedCornerShape(8.dp))
+                .padding(16.dp)
+        ) {
+            Column {
+                Text(
+                    text = "- 최대 4시간까지 녹음할 수 있습니다.",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "- 녹음 중 다른 앱을 사용하면 오류가 발생할 수 있습니다.",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+        VolumeBar(volumeLevels)
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = String.format("%02d:%02d:%02d", recordingTime / 3600, (recordingTime % 3600) / 60, recordingTime % 60),
+            color = Color.White,
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(20.dp))
-        IconButton(
-            onClick = {
-                if (isRecording) viewModel.stopRecordingAndUpload() else viewModel.startRecording()
-            },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = if (isRecording) painterResource(id = R.drawable.ic_kakao) else painterResource(id = R.drawable.ic_mike),
-                contentDescription = if (isRecording) "Stop Recording" else "Start Recording"
-            )
+            TextButton(onClick = { navController.popBackStack() }) {
+                Text(text = "취소", color = Color.White, fontSize = 16.sp)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(
+                onClick = {
+                    if (isRecording) viewModel.stopRecordingAndUpload() else viewModel.startRecording()
+                },
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(
+                    painter = if (isRecording) painterResource(id = R.drawable.ic_record_pause) else painterResource(id = R.drawable.ic_record_start),
+                    contentDescription = if (isRecording) "Stop Recording" else "Start Recording",
+                    tint = Color.Red,
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
 
+@Composable
+fun VolumeBar(volumeLevels: List<Int>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(30.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        volumeLevels.forEach { level ->
+            Box(
+                modifier = Modifier
+                    .size(10.dp, 30.dp)
+                    .padding(2.dp)
+                    .background(if (level > 5) Color.White else Color.Gray)
+            )
+        }
+    }
+}
 
 @Composable
 fun SettingsRedirectDialog(navController: NavController, context: Context) {
