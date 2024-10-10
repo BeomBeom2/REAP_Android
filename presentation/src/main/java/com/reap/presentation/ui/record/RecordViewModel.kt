@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
-
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val postRecognizeUrlUseCase: PostRecognizeUrlUseCase,
@@ -29,10 +28,13 @@ class RecordViewModel @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
 
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
     private val _recordingTime = MutableStateFlow(0)
     val recordingTime: StateFlow<Int> = _recordingTime.asStateFlow()
 
-    private val _volumeLevels = MutableStateFlow<List<Int>>(listOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+    private val _volumeLevels = MutableStateFlow<List<Int>>(listOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
     val volumeLevels: StateFlow<List<Int>> = _volumeLevels.asStateFlow()
 
     private var timerJob: Job? = null
@@ -41,12 +43,30 @@ class RecordViewModel @Inject constructor(
         val filePath = getApplication<Application>().filesDir.absolutePath + "/record.m4a"
         recorder.startRecording(filePath)
         _isRecording.value = true
+        _isPaused.value = false
         startTimer()
+    }
+
+    fun pauseRecording() {
+        if (_isRecording.value) {
+            recorder.pauseRecording()  // Assuming AudioRecorder has a pause functionality
+            _isPaused.value = true
+            stopTimer()
+        }
+    }
+
+    fun resumeRecording() {
+        if (_isPaused.value) {
+            recorder.resumeRecording()  // Assuming AudioRecorder has a resume functionality
+            _isPaused.value = false
+            startTimer()
+        }
     }
 
     fun stopRecordingAndUpload() {
         recorder.stopRecording()
         _isRecording.value = false
+        _isPaused.value = false
         stopTimer()
         uploadFile(Uri.fromFile(File(recorder.currentFilePath)))
     }
@@ -71,7 +91,6 @@ class RecordViewModel @Inject constructor(
 
     private fun stopTimer() {
         timerJob?.cancel()
-        _recordingTime.value = 0
     }
 
     @SuppressLint("MissingPermission")
@@ -97,11 +116,11 @@ class RecordViewModel @Inject constructor(
                 audioRecord.startRecording()
             }
 
-            while (_isRecording.value) {
+            while (_isRecording.value && !_isPaused.value) {
                 val readSize = audioRecord.read(audioBuffer, 0, bufferSize)
                 if (readSize > 0) {
                     val rms = calculateRMS(audioBuffer, readSize)
-                    val level = (rms / 32767.0 * 10).toInt().coerceIn(0, 10) // 데시벨 레벨을 0-10 범위로 정규화
+                    val level = (rms / 32767.0 * 20).toInt().coerceIn(0, 20) // 데시벨 레벨을 0-10 범위로 정규화
                     val updatedLevels = _volumeLevels.value.toMutableList().apply {
                         removeAt(0)
                         add(level)
@@ -122,7 +141,7 @@ class RecordViewModel @Inject constructor(
         }
         return Math.sqrt(sum / readSize)
     }
-
 }
+
 
 
