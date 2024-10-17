@@ -2,13 +2,18 @@ package com.reap.presentation.ui.record
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.ContentResolver
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.net.Uri
+import android.provider.OpenableColumns
+import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.reap.domain.usecase.main.PostRecognizeUrlUseCase
+import com.reap.presentation.ui.main.UploadStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,16 +22,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
+
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val postRecognizeUrlUseCase: PostRecognizeUrlUseCase,
     application: Application
 ) : AndroidViewModel(application) {
-    private val recorder = AudioRecorder()
-    private val _isRecording = MutableStateFlow(false)
-    val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
+
+    enum class RecordingState {
+        IDLE, RECORDING, PAUSED
+    }
+
+    val recorder = AudioRecorder()
+    private val _recordingState = MutableStateFlow(RecordingState.IDLE)
+    val recordingState: StateFlow<RecordingState> = _recordingState.asStateFlow()
 
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
@@ -37,38 +52,47 @@ class RecordViewModel @Inject constructor(
     private val _volumeLevels = MutableStateFlow<List<Int>>(listOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
     val volumeLevels: StateFlow<List<Int>> = _volumeLevels.asStateFlow()
 
+    private val _uploadStatus = MutableStateFlow<UploadStatus>(UploadStatus.Idle)
+    val uploadStatus: StateFlow<UploadStatus> = _uploadStatus.asStateFlow()
+
     private var timerJob: Job? = null
+
+    fun uploadAudioFile(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val mediaPart = prepareFilePart(uri)
+                val fileId = postRecognizeUrlUseCase.invoke("JJB", mediaPart)
+                //_audioFileId.value = fileId
+                _uploadStatus.value = UploadStatus.Success(fileId)
+            } catch (e: Exception) {
+                _uploadStatus.value = UploadStatus.Error(e.message ?: "An unknown error occurred.")
+            }
+        }
+    }
 
     fun startRecording() {
         val filePath = getApplication<Application>().filesDir.absolutePath + "/record.m4a"
         recorder.startRecording(filePath)
-        _isRecording.value = true
-        _isPaused.value = false
+        _recordingState.value = RecordingState.RECORDING
         startTimer()
     }
 
     fun pauseRecording() {
-        if (_isRecording.value) {
-            recorder.pauseRecording()  // Assuming AudioRecorder has a pause functionality
-            _isPaused.value = true
+        if (_recordingState.value == RecordingState.RECORDING) {
+            recorder.pauseRecording()
+            _recordingState.value = RecordingState.PAUSED
             stopTimer()
-        }
-    }
-
-    fun resumeRecording() {
-        if (_isPaused.value) {
-            recorder.resumeRecording()  // Assuming AudioRecorder has a resume functionality
-            _isPaused.value = false
-            startTimer()
         }
     }
 
     fun stopRecordingAndUpload() {
         recorder.stopRecording()
-        _isRecording.value = false
-        _isPaused.value = false
+        _recordingState.value = RecordingState.IDLE
         stopTimer()
-        uploadFile(Uri.fromFile(File(recorder.currentFilePath)))
+        val uri = Uri.fromFile(File(recorder.currentFilePath))
+        viewModelScope.launch {
+            uploadAudioFile(uri)
+        }
     }
 
     private fun uploadFile(fileUri: Uri) {
@@ -116,7 +140,7 @@ class RecordViewModel @Inject constructor(
                 audioRecord.startRecording()
             }
 
-            while (_isRecording.value && !_isPaused.value) {
+            while (_recordingState.value == RecordingState.RECORDING) {
                 val readSize = audioRecord.read(audioBuffer, 0, bufferSize)
                 if (readSize > 0) {
                     val rms = calculateRMS(audioBuffer, readSize)
@@ -134,6 +158,57 @@ class RecordViewModel @Inject constructor(
         }
     }
 
+    private fun getOriginalFileName(contentResolver: ContentResolver, fileUri: Uri): String {
+        var fileName = "unknown"
+        val cursor = contentResolver.query(fileUri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    fileName = it.getString(nameIndex)
+                }
+            }
+        }
+        return fileName
+    }
+
+    private fun prepareFilePart(fileUri: Uri): MultipartBody.Part {
+        val context = getApplication<Application>()
+        val contentResolver = context.contentResolver
+        val fileInputStream = contentResolver.openInputStream(fileUri)
+
+        // 원본 파일 이름 가져오기
+        val originalFileName = getOriginalFileName(contentResolver, fileUri)
+
+        // MIME 타입 가져오기
+        val mimeType = contentResolver.getType(fileUri)
+
+        // MIME 타입에 따른 확장자 추출
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "unknown"
+
+        // 파일 이름에 확장자 추가
+        val filenameWithExtension = if (originalFileName.contains('.')) {
+            originalFileName // 이미 확장자가 있는 경우 그대로 사용
+        } else {
+            "$originalFileName.$extension" // 확장자를 추가
+        }
+
+        Log.d("MainViewModel", "Filename: $filenameWithExtension, MIME Type: $mimeType")
+
+        // 임시 파일 생성
+        val tempFile = File(context.cacheDir, filenameWithExtension)
+        val fileOutputStream = FileOutputStream(tempFile)
+
+        fileInputStream?.use { input ->
+            fileOutputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        val requestFile = tempFile.asRequestBody(mimeType?.toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData("media", filenameWithExtension, requestFile)
+    }
+
     private fun calculateRMS(buffer: ShortArray, readSize: Int): Double {
         var sum = 0.0
         for (i in 0 until readSize) {
@@ -142,6 +217,3 @@ class RecordViewModel @Inject constructor(
         return Math.sqrt(sum / readSize)
     }
 }
-
-
-
