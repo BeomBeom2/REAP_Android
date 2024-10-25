@@ -10,13 +10,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reap.domain.model.RecentlyRecording
 
 @Composable
-fun RecordingsList(recordings: List<RecentlyRecording>) {
+fun RecordItemList(recordings: List<RecentlyRecording>) {
+    Text(
+        modifier = Modifier
+            .padding(bottom = 10.dp, top = 30.dp),
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        text = "최근 녹음"
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -37,7 +46,7 @@ fun RecordingItem(recording: RecentlyRecording) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "녹음 이름: ${recording.fileName}",
+                text = "녹음 이름: ${recording.fileName.substringBeforeLast(".")}",
                 fontSize = 16.sp,
                 style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,

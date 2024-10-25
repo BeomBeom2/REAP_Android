@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.kizitonwose.calendar.compose.CalendarState
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -54,6 +55,7 @@ import com.kizitonwose.calendar.core.nextMonth
 import com.kizitonwose.calendar.core.previousMonth
 import com.reap.domain.model.RecentlyRecording
 import com.reap.presentation.common.Colors
+import com.reap.presentation.navigation.NavRoutes
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -63,7 +65,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Composable
-fun CalendarCustom(recordings: List<RecentlyRecording>) {
+fun CalendarCustom(recordings: List<RecentlyRecording>, navController: NavController) {
     val daysOfWeek = remember { daysOfWeek() }
     val currentDate = remember { LocalDate.now() }
     val currentMonth = remember { YearMonth.now() }
@@ -137,11 +139,13 @@ fun CalendarCustom(recordings: List<RecentlyRecording>) {
                         isSelectable = isSelectable,
                     ) { clicked ->
                         // 클릭한 날짜가 이미 selections에 있으면 제거, 없으면 추가
-                        if (selections.contains(clicked)) {
-                            selections = selections.filter { it != clicked }
-                        } else {
-                            selections = selections + clicked
-                        }
+                        //if (selections.contains(clicked)) {
+                        //    selections = selections.filter { it != clicked }
+                        //} else {
+                        //    selections = selections + clicked
+                        //}
+
+                        navController.navigate(NavRoutes.SelectedDateRecord.withDate(clicked.format(dateFormatter)))
                     }
                 },
             )
@@ -317,9 +321,4 @@ fun Day(
 }
 
 
-//@Preview
-//@Composable
-//private fun calendarCustom() {
-//    CalendarCustom()
-//}
 

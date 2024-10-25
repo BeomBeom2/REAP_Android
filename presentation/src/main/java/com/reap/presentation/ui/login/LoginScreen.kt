@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -42,12 +43,13 @@ import androidx.navigation.NavController
 import com.reap.presentation.R
 import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.home.calendar.clickable
-import androidx.compose.ui.res.painterResource
 
 @Composable
 fun LoginScreen(
     navController: NavController
 ) {
+    //KakaoSdk.init(this, BuildConfig.KAKAO_NATIVE_KEY)
+
     Login(
         viewModel = hiltViewModel(),
         onLogin = { navController.navigate(NavRoutes.Home.route) }

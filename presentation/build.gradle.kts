@@ -1,9 +1,15 @@
+import java.util.Properties
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
     kotlin("kapt")
 }
+
+val properties = Properties()
+file("../app/local.properties").inputStream().use{ properties.load(it) }
+
 
 android {
     namespace = "com.reap.presentation"
@@ -14,6 +20,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        // 카카오 로그인
+        buildConfigField("String", "KAKAO_NATIVE_KEY", "\"${properties["kakao_native_key"]}\"")
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["kakao_rest_api_key"]}\"")
+
+        manifestPlaceholders["KAKAO_NATIVE_KEY"] = properties["kakao_manifest_native_key"].toString()
     }
 
     buildFeatures {
@@ -64,6 +76,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.core)
 
+    implementation(libs.kakao.user)
 
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.android)

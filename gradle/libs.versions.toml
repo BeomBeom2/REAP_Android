@@ -34,6 +34,7 @@ loggingInterceptor = "5.0.0-alpha.14"
 okhttp = "5.0.0-alpha.14"
 okhttpUrlconnection = "5.0.0-alpha.14"
 accompanistPermissions = "0.36.0"
+kakao = "2.20.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistPermissions" }
+kakao-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kakao" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

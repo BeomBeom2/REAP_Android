@@ -57,10 +57,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
@@ -70,6 +72,7 @@ import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.main.MainViewModel
 import com.reap.presentation.ui.main.UploadStatus
 import com.reap.presentation.ui.record.RecordScreen
+import com.reap.presentation.ui.selectedDateRecord.SelectedDateRecordScreen
 import com.reap.presentation.ui.splash.SplashScreen
 
 /**
@@ -143,6 +146,7 @@ private fun MainScreenNavigationConfigurations(
         loginScreen(navController, bottomBarState)
         homeScreen(navController, bottomBarState, mainViewModel)
         recordScreen(navController, bottomBarState)
+        selectedDateRecordScreen(navController, bottomBarState)
     }
 }
 
@@ -172,6 +176,20 @@ fun NavGraphBuilder.recordScreen(
     }
 }
 
+fun NavGraphBuilder.selectedDateRecordScreen(
+    navController: NavController,
+    bottomBarState: MutableState<Boolean>,
+) {
+    composable(
+        route = NavRoutes.SelectedDateRecord.route,
+        arguments = listOf(navArgument("selectedDate") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
+        bottomBarState.value = true
+
+        SelectedDateRecordScreen(navController = navController, selectedDate = selectedDate)
+    }
+}
 
 fun NavGraphBuilder.homeScreen(
     navController: NavController,
