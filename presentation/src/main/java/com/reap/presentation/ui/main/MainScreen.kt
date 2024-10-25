@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -63,6 +65,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.reap.data.getAccessToken
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
@@ -82,25 +85,19 @@ import com.reap.presentation.ui.splash.SplashScreen
 fun MainScreen() {
     val mainViewModel: MainViewModel = hiltViewModel()
     val navController = rememberNavController()
-    var showSplashScreen by remember { mutableStateOf(true) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = showSplashScreen,
-            enter = fadeIn(),
-            exit = fadeOut(animationSpec = tween(durationMillis = 1000)),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SplashScreen(onSplashComplete = { showSplashScreen = false })
-        }
-
-        AnimatedVisibility(
-            visible = !showSplashScreen,
-            enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SettingUpBottomNavigationBarAndCollapsing(navController, mainViewModel)
-        }
+    Log.d("MainScreen", "${getAccessToken(LocalContext.current)}")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 1000,
+                    easing = FastOutSlowInEasing
+                )
+            )
+    ) {
+        SettingUpBottomNavigationBarAndCollapsing(navController, mainViewModel)
     }
 }
 
@@ -141,25 +138,11 @@ private fun MainScreenNavigationConfigurations(
     NavHost(
         modifier = Modifier.padding(paddingValues),
         navController = navController,
-        startDestination = NavRoutes.Login.route
+        startDestination = NavRoutes.Home.route
     ) {
-        loginScreen(navController, bottomBarState)
         homeScreen(navController, bottomBarState, mainViewModel)
         recordScreen(navController, bottomBarState)
         selectedDateRecordScreen(navController, bottomBarState)
-    }
-}
-
-fun NavGraphBuilder.loginScreen(
-    navController: NavController,
-    bottomBarState: MutableState<Boolean>
-) {
-    composable(
-        route = NavRoutes.Login.route
-    ) {
-        bottomBarState.value = false
-
-        LoginScreen(navController)
     }
 }
 

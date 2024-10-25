@@ -21,7 +21,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "REAP_Android"
-include(":app")
 include(":presentation")
 include(":data")
 include(":domain")

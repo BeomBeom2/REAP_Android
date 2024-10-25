@@ -1,4 +1,4 @@
-package com.reap.reap_android.ui.main
+package com.reap.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.reap.presentation.common.theme.REAPComposableTheme
+import com.reap.reap_android.ui.main.MainScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

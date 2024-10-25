@@ -2,13 +2,14 @@ import java.util.Properties
 
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
     kotlin("kapt")
+    alias(libs.plugins.hilt.android)
 }
 
 val properties = Properties()
-file("../app/local.properties").inputStream().use{ properties.load(it) }
+file("../local.properties").inputStream().use { properties.load(it) }
 
 
 android {
@@ -16,20 +17,27 @@ android {
     compileSdk = 34
 
     defaultConfig {
+        applicationId = "com.reap.reap_android"
         minSdk = 30
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
 
         // 카카오 로그인
-        buildConfigField("String", "KAKAO_NATIVE_KEY", "\"${properties["kakao_native_key"]}\"")
-        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["kakao_rest_api_key"]}\"")
+        buildConfigField("String", "KAKAO_API_KEY", "\"${properties["KAKAO_API_KEY"]}\"")
+        resValue("string", "KAKAO_REDIRECT_URI", "${properties["KAKAO_REDIRECT_URI"]}")
+        resValue("string", "KAKAO_API_KEY", "${properties["KAKAO_API_KEY"]}")
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["KAKAO_REST_API_KEY"]}\"")
 
-        manifestPlaceholders["KAKAO_NATIVE_KEY"] = properties["kakao_manifest_native_key"].toString()
+        manifestPlaceholders["KAKAO_API_KEY"] = properties["KAKAO_API_KEY"].toString()
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
+
     }
 
     composeOptions {
@@ -59,15 +67,16 @@ kapt {
 }
 
 dependencies {
-    implementation(libs.androidx.compiler)
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.compiler)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.material)
 
 
     implementation(libs.accompanist.permissions)
@@ -76,6 +85,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.core)
 
+    implementation(libs.androidx.material.icons.core)
     implementation(libs.kakao.user)
 
     kapt(libs.hilt.compiler)
