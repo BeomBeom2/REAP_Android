@@ -26,12 +26,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 카카오 로그인
-        buildConfigField("String", "KAKAO_API_KEY", "\"${properties["KAKAO_API_KEY"]}\"")
-        resValue("string", "KAKAO_REDIRECT_URI", "${properties["KAKAO_REDIRECT_URI"]}")
-        resValue("string", "KAKAO_API_KEY", "${properties["KAKAO_API_KEY"]}")
         buildConfigField("String", "KAKAO_REST_API_KEY", "\"${properties["KAKAO_REST_API_KEY"]}\"")
-
-        manifestPlaceholders["KAKAO_API_KEY"] = properties["KAKAO_API_KEY"].toString()
+        buildConfigField("String", "KAKAO_API_KEY", "\"${properties["KAKAO_API_KEY"]}\"")
+        resValue("string", "KAKAO_REDIRECT_URI", "\"${properties["KAKAO_REDIRECT_URI"]}\"")
+        resValue("string", "KAKAO_API_KEY", "\"${properties["KAKAO_API_KEY"]}\"")
     }
 
     buildFeatures {

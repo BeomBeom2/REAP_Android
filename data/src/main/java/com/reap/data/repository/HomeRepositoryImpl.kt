@@ -1,6 +1,6 @@
 package com.reap.data.repository
 
-import com.reap.data.remote.HomeApi
+import com.reap.data.remote.api.HomeApi
 import com.reap.domain.model.RecentlyRecording
 import com.reap.domain.repository.HomeRepository
 import javax.inject.Inject

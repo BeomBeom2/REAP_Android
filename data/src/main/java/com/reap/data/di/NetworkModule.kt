@@ -1,8 +1,9 @@
 package com.reap.data.di
 
 import android.content.Context
-import com.reap.data.remote.HomeApi
-import com.reap.data.remote.MainApi
+import com.reap.data.remote.api.HomeApi
+import com.reap.data.remote.api.LoginApi
+import com.reap.data.remote.api.MainApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,6 +63,12 @@ object NetworkModule {
     @Singleton
     fun provideHomeApi(retrofit: Retrofit): HomeApi {
         return retrofit.create(HomeApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLoginApi(retrofit: Retrofit): LoginApi {
+        return retrofit.create(LoginApi::class.java)
     }
 
 

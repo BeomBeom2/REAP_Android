@@ -1,4 +1,4 @@
-package com.reap.data.remote
+package com.reap.data.remote.api
 
 import com.reap.domain.model.RecognizeResponse
 import okhttp3.MultipartBody

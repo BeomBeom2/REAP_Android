@@ -1,7 +1,6 @@
-package com.reap.data.remote
+package com.reap.data.remote.api
 
 import com.reap.domain.model.RecentlyRecording
-import okhttp3.RequestBody
 import retrofit2.http.GET
 import retrofit2.http.Path
 

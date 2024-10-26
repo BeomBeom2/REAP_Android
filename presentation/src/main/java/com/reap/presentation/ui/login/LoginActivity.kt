@@ -4,12 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,6 +37,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
@@ -52,16 +53,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.common.KakaoSdk
-import com.kakao.sdk.common.model.ClientError
-import com.kakao.sdk.common.model.ClientErrorCause
-import com.kakao.sdk.user.UserApiClient
 import com.reap.data.saveAccessToken
-import com.reap.presentation.BuildConfig
 import com.reap.presentation.MainActivity
 import com.reap.presentation.R
 import com.reap.presentation.common.theme.REAPComposableTheme
@@ -71,34 +65,78 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
+    private val loginViewModel: LoginViewModel by viewModels()
+    private lateinit var kakaoLoginLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setKakaoLoginActivityForResult()
+
         setContent {
             REAPComposableTheme(darkTheme = false) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     LoginScreen(
                         context = this,
                         onLogin = {
-                        val intent = Intent(this, MainActivity::class.java)
-
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-
-                        startActivity(intent)
-                    })
+                            val intent = Intent(this, MainActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            startActivity(intent)
+                        },
+                        onStartKakaoLogin = { startKakaoLogin() },
+                        loginViewModel = loginViewModel
+                    )
                 }
+            }
+        }
+    }
+
+    private fun startKakaoLogin() {
+        val intent = Intent(this, AuthCodeHandlerActivity::class.java)
+        kakaoLoginLauncher.launch(intent)
+    }
+
+    private fun setKakaoLoginActivityForResult() {
+        kakaoLoginLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                val accessToken = data?.getStringExtra("accessToken")
+
+                if (accessToken != null) {
+                    loginViewModel.getAccessToken(accessToken)
+                } else {
+                    Toast.makeText(this, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
+                }
+            } else { // 로그인 실패
+                Log.e("KakaoLogin", "카카오 로그인 실패")
+                Toast.makeText(this, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
 
+
 @Composable
 fun LoginScreen(
-    context : Context,
-    onLogin: () -> Unit
+    context: Context,
+    onLogin: () -> Unit,
+    onStartKakaoLogin: () -> Unit,
+    loginViewModel: LoginViewModel
 ) {
+    val accessTokenState = loginViewModel.accessToken.collectAsState()
     var showSplashScreen by remember { mutableStateOf(true) }
+
+    accessTokenState.value?.let { result ->
+        if (result.success) {
+            Log.e("LoginActivity", "카카오톡 jwt토큰 반환 성공 : ${result.jwtToken}")
+            saveAccessToken(context, result.jwtToken)
+            onLogin()
+
+        } else {
+            Log.e("LoginActivity", "카카오톡 jwt토큰 반환 실패")
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -115,15 +153,15 @@ fun LoginScreen(
             enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
             modifier = Modifier.fillMaxSize()
         ) {
-            Login(onLogin, context)
+            Login(onStartKakaoLogin)
         }
     }
 }
 
+
 @Composable
 internal fun Login(
-    onLogin: () -> Unit,
-    context : Context
+    onStartKakaoLogin: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -177,12 +215,12 @@ internal fun Login(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.Center, // 가운데 정렬
-            verticalAlignment = Alignment.CenterVertically // 세로 중앙 정렬
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "회원가입",
-                modifier = Modifier.clickable { }, // 회원가입 화면으로 이동
+                modifier = Modifier.clickable { },
                 color = colorResource(id = R.color.cement_5),
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
@@ -195,7 +233,7 @@ internal fun Login(
             )
             Text(
                 text = "비밀번호 찾기",
-                modifier = Modifier.clickable {  }, // 비밀번호 찾기 화면으로 이동
+                modifier = Modifier.clickable { },
                 color = colorResource(id = R.color.cement_5),
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
@@ -210,7 +248,8 @@ internal fun Login(
             colors = ButtonDefaults.buttonColors(colorResource(id = R.color.signature_1)),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("로그인", color = Color.Black, style = MaterialTheme.typography.bodyMedium,
+            Text(
+                "로그인", color = Color.Black, style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -229,8 +268,7 @@ internal fun Login(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { createKakaoToken(onLogin, context)
-                      },
+            onClick = { onStartKakaoLogin() },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(colorResource(id = R.color.kakao)),
             shape = RoundedCornerShape(10.dp)
@@ -242,7 +280,9 @@ internal fun Login(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_kakao),
                     contentDescription = "Kakao logo",
-                    modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 8.dp),
                     tint = Color.Unspecified
                 )
                 Text(
@@ -256,57 +296,4 @@ internal fun Login(
     }
 }
 
-fun createKakaoToken(onLogin: () -> Unit, context: Context) {
-    val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
-        Handler(Looper.getMainLooper()).post {
-            if (error != null) {
-                Log.e("createKakaoToken", "카카오톡 로그인 실패, 에러 메시지 : $error")
-                Toast.makeText(context, "카카오톡 로그인 실패, 에러 메시지 : $error", Toast.LENGTH_SHORT).show()
-            } else if (token != null) {
-                Log.e("createKakaoToken", "AccessToken is $token")
-                Toast.makeText(context, "카카오톡 로그인 성공, Token : $token", Toast.LENGTH_SHORT).show()
-                saveAccessToken(context, token.accessToken)
 
-                // 로그인 성공 시 콜백 호출
-                onLogin()
-            }
-        }
-    }
-
-    if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-        UserApiClient.instance.loginWithKakaoTalk(context = context) { token, error ->
-            Handler(Looper.getMainLooper()).post {
-                if (error != null) {
-                    if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
-                        Log.e("createKakaoToken", "카카오톡 로그인 실패, 에러 메시지 : $error")
-                        return@post
-                    }
-                    UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
-                } else if (token != null) {
-                    Toast.makeText(context, "카카오톡 로그인 성공, Token : $token", Toast.LENGTH_SHORT).show()
-                    Log.e("createKakaoToken", "AccessToken is ${token.accessToken}")
-                    saveAccessToken(context, token.accessToken)
-                    // 로그인 성공 시 콜백 호출
-                    onLogin()
-                }
-            }
-        }
-    } else {
-        UserApiClient.instance.loginWithKakaoAccount(context = context, callback = callback)
-    }
-}
-
-fun saveAccessToken(context: Context, token: String) {
-    Log.d("createKakaoToken", "Saving access token: $token")
-    // 여기에 토큰 저장 로직 구현
-}
-
-@Preview
-@Composable
-private fun login() {
-    Login(
-
-        onLogin =   {},
-        context = LocalContext.current
-    )
-}

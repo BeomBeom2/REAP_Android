@@ -1,6 +1,6 @@
 package com.reap.data.repository
 
-import com.reap.data.remote.MainApi
+import com.reap.data.remote.api.MainApi
 import com.reap.domain.repository.MainRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody

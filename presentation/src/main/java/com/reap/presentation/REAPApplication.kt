@@ -1,8 +1,8 @@
 package com.reap.presentation
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
 import com.kakao.sdk.common.KakaoSdk
+import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class REAPApplication  : Application(){
