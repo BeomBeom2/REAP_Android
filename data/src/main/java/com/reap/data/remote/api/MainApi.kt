@@ -9,9 +9,9 @@ import retrofit2.http.Part
 
 interface MainApi {
     @Multipart
-    @POST("/recognize-url")
+    @POST("/api/auth/uploadMediaFile")
     suspend fun postRecognizeUrl(
-        @Part("user") user: RequestBody,
+        @Part("topic") topic: RequestBody,
         @Part media: MultipartBody.Part
     ): RecognizeResponse
 }

@@ -49,7 +49,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.reap.presentation.R
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -88,14 +87,12 @@ internal fun Record(
 
     var showDialog by remember { mutableStateOf(false) }
     var topic by remember { mutableStateOf("") }
-
     if (showDialog) {
         TopicDialog(
             topic = topic,
             onTopicChange = { topic = it },
             onConfirm = {
-                val uri = Uri.fromFile(File(viewModel.recorder.currentFilePath))
-                viewModel.stopRecordingAndUpload()
+                viewModel.stopRecordingAndUpload(topic)
                 showDialog = false
             },
             onDismiss = { showDialog = false }
@@ -200,7 +197,7 @@ internal fun Record(
                 onClick = {
                     when (recordingState) {
                         RecordViewModel.RecordingState.RECORDING -> viewModel.pauseRecording()
-                        RecordViewModel.RecordingState.PAUSED, RecordViewModel.RecordingState.IDLE -> viewModel.startRecording()
+                        RecordViewModel.RecordingState.PAUSED, RecordViewModel.RecordingState.IDLE -> viewModel.startRecording(currentTime)
                     }
                 },
                 modifier = Modifier.size(64.dp)

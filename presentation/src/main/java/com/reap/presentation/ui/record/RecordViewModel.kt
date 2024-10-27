@@ -9,7 +9,6 @@ import android.media.MediaRecorder
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.reap.domain.usecase.main.PostRecognizeUrlUseCase
@@ -57,11 +56,11 @@ class RecordViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
-    fun uploadAudioFile(uri: Uri) {
+    fun uploadAudioFile(uri: Uri, topic : String) {
         viewModelScope.launch {
             try {
                 val mediaPart = prepareFilePart(uri)
-                val fileId = postRecognizeUrlUseCase.invoke("JJB", mediaPart)
+                val fileId = postRecognizeUrlUseCase(topic, mediaPart)
                 //_audioFileId.value = fileId
                 _uploadStatus.value = UploadStatus.Success(fileId)
             } catch (e: Exception) {
@@ -70,8 +69,8 @@ class RecordViewModel @Inject constructor(
         }
     }
 
-    fun startRecording() {
-        val filePath = getApplication<Application>().filesDir.absolutePath + "/record.m4a"
+    fun startRecording(fileName : String) {
+        val filePath = getApplication<Application>().filesDir.absolutePath + "/$fileName.m4a"
         recorder.startRecording(filePath)
         _recordingState.value = RecordingState.RECORDING
         startTimer()
@@ -85,13 +84,13 @@ class RecordViewModel @Inject constructor(
         }
     }
 
-    fun stopRecordingAndUpload() {
+    fun stopRecordingAndUpload(topic : String) {
         recorder.stopRecording()
         _recordingState.value = RecordingState.IDLE
         stopTimer()
         val uri = Uri.fromFile(File(recorder.currentFilePath))
         viewModelScope.launch {
-            uploadAudioFile(uri)
+            uploadAudioFile(uri, topic)
         }
     }
 
@@ -174,29 +173,18 @@ class RecordViewModel @Inject constructor(
 
     private fun prepareFilePart(fileUri: Uri): MultipartBody.Part {
         val context = getApplication<Application>()
-        val contentResolver = context.contentResolver
-        val fileInputStream = contentResolver.openInputStream(fileUri)
+        val fileInputStream = context.contentResolver.openInputStream(fileUri)
 
-        // 원본 파일 이름 가져오기
-        val originalFileName = getOriginalFileName(contentResolver, fileUri)
+        // `recorder.currentFilePath`에서 파일 이름과 확장자 추출
+        val currentFilePath = recorder.currentFilePath ?: "recording.m4a"
+        val file = File(currentFilePath)
+        val originalFileName = file.name // 파일 이름과 확장자 포함된 이름 추출
+        val mimeType = context.contentResolver.getType(fileUri) ?: "audio/mp4" // 기본 MIME 타입을 "audio/mp4"로 설정
 
-        // MIME 타입 가져오기
-        val mimeType = contentResolver.getType(fileUri)
-
-        // MIME 타입에 따른 확장자 추출
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "unknown"
-
-        // 파일 이름에 확장자 추가
-        val filenameWithExtension = if (originalFileName.contains('.')) {
-            originalFileName // 이미 확장자가 있는 경우 그대로 사용
-        } else {
-            "$originalFileName.$extension" // 확장자를 추가
-        }
-
-        Log.d("MainViewModel", "Filename: $filenameWithExtension, MIME Type: $mimeType")
+        Log.d("MainViewModel", "Filename: $originalFileName, MIME Type: $mimeType")
 
         // 임시 파일 생성
-        val tempFile = File(context.cacheDir, filenameWithExtension)
+        val tempFile = File(context.cacheDir, originalFileName)
         val fileOutputStream = FileOutputStream(tempFile)
 
         fileInputStream?.use { input ->
@@ -205,9 +193,10 @@ class RecordViewModel @Inject constructor(
             }
         }
 
-        val requestFile = tempFile.asRequestBody(mimeType?.toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData("media", filenameWithExtension, requestFile)
+        val requestFile = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData("media", originalFileName, requestFile)
     }
+
 
     private fun calculateRMS(buffer: ShortArray, readSize: Int): Double {
         var sum = 0.0

@@ -1,12 +1,10 @@
 package com.reap.data.remote.api
 
-import com.reap.domain.model.RecentlyRecording
+import com.reap.domain.model.RecordingMetaData
 import retrofit2.http.GET
-import retrofit2.http.Path
 
 interface HomeApi {
-    @GET("audio/api/detail/{userId}/record-script")
+    @GET("audio/api/detail/record-script")
     suspend fun getHomeRecentlyRecodingData(
-        @Path("userId") user: String,
-    ): List<RecentlyRecording>
+    ): List<RecordingMetaData>
 }

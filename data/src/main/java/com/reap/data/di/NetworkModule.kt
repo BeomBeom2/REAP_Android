@@ -1,9 +1,13 @@
 package com.reap.data.di
 
 import android.content.Context
+import com.kust.kustaurant.data.di.JwtTokenInterceptor
+import com.kust.kustaurant.data.di.TokenAuthenticator
+import com.reap.data.remote.api.ChatApi
 import com.reap.data.remote.api.HomeApi
 import com.reap.data.remote.api.LoginApi
 import com.reap.data.remote.api.MainApi
+import com.reap.data.remote.api.SelectedDateRecordApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,8 +42,8 @@ object NetworkModule {
             .readTimeout(30000, TimeUnit.MILLISECONDS)
             .connectTimeout(30000, TimeUnit.MILLISECONDS)
             .addInterceptor(loggingInterceptor)
-            //.addInterceptor(XAccessTokenInterceptor(context))
-            //.authenticator(TokenAuthenticator(context))  // Authenticator 추가
+            .addInterceptor(JwtTokenInterceptor(context))
+            .authenticator(TokenAuthenticator(context))  // Authenticator 추가
             .build()
     }
 
@@ -71,5 +75,15 @@ object NetworkModule {
         return retrofit.create(LoginApi::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideSelectedDateRecordApi(retrofit: Retrofit): SelectedDateRecordApi {
+        return retrofit.create(SelectedDateRecordApi::class.java)
+    }
 
+    @Provides
+    @Singleton
+    fun provideChatApi(retrofit: Retrofit): ChatApi {
+        return retrofit.create(ChatApi::class.java)
+    }
 }

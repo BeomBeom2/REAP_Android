@@ -1,6 +1,6 @@
 package com.reap.domain.usecase.home
 
-import com.reap.domain.model.RecentlyRecording
+import com.reap.domain.model.RecordingMetaData
 import com.reap.domain.repository.HomeRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -9,7 +9,7 @@ import javax.inject.Singleton
 class GetHomeRecentlyRecodingDataUseCase @Inject constructor(
     private val homeRepository : HomeRepository
 ) {
-    suspend operator fun invoke(user: String) : List<RecentlyRecording> {
-        return homeRepository.getHomeRecentlyRecodingData(user)
+    suspend operator fun invoke() : List<RecordingMetaData> {
+        return homeRepository.getHomeRecentlyRecodingData()
     }
 }

@@ -1,25 +1,19 @@
 package com.kust.kustaurant.data.di
 
 import android.content.Context
-import android.util.Log
 import com.reap.data.getAccessToken
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class XAccessTokenInterceptor(val context: Context) : Interceptor {
+class JwtTokenInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val builder = chain.request().newBuilder()
-        val accessToken = getAccessToken(context)
+        val requestBuilder = chain.request().newBuilder()
+        val jwtToken = getAccessToken(context)
 
-        accessToken?.let {
-            builder.addHeader("Authorization", it)
-            Log.d("NetworkInterceptor", "Authorization: $it")
+        if (jwtToken != null) {
+            requestBuilder.addHeader("Authorization", "$jwtToken")
         }
 
-        return chain.proceed(builder.build())
-    }
-
-    companion object {
-        const val AUTHORIZATION = "Authorization"
+        return chain.proceed(requestBuilder.build())
     }
 }

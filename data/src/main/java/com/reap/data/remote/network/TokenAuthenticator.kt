@@ -33,7 +33,7 @@ class TokenAuthenticator(private val context: Context) : Authenticator {
     private fun refreshToken(oldToken: String?): String? {
         try {
             val refreshTokenRequest = Request.Builder()
-                .url("http://52.78.97.174:8080/api/v1/new-access-token")
+                .url("http://52.78.97.174:8080/token/refresh")
                 .post(RequestBody.create("application/json".toMediaTypeOrNull(), "{}"))
                 .header("Authorization", oldToken ?: "")
                 .build()

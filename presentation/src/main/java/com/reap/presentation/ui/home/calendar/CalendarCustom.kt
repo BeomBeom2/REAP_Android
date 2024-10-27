@@ -53,7 +53,7 @@ import com.kizitonwose.calendar.core.daysOfWeek
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.core.nextMonth
 import com.kizitonwose.calendar.core.previousMonth
-import com.reap.domain.model.RecentlyRecording
+import com.reap.domain.model.RecordingMetaData
 import com.reap.presentation.common.Colors
 import com.reap.presentation.navigation.NavRoutes
 import kotlinx.coroutines.launch
@@ -65,7 +65,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Composable
-fun CalendarCustom(recordings: List<RecentlyRecording>, navController: NavController) {
+fun CalendarCustom(recordings: List<RecordingMetaData>, navController: NavController) {
     val daysOfWeek = remember { daysOfWeek() }
     val currentDate = remember { LocalDate.now() }
     val currentMonth = remember { YearMonth.now() }

@@ -8,5 +8,5 @@ import com.reap.presentation.R
 sealed class BottomBarItem(var route: String, var icon: Int, var title: String) {
     object Home : BottomBarItem("Home", R.drawable.ic_home, "Home")
     object Record : BottomBarItem("Record", R.drawable.ic_mike, "Record")
-    object Search : BottomBarItem("Search", R.drawable.ic_search, "Search")
+    object Search : BottomBarItem("Chat", R.drawable.ic_search, "Chat")
 }

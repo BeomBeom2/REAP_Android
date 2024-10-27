@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 fun saveAccessToken(context: Context, token: String) {
     val preferences = context.getSharedPreferences("app_preferences", AppCompatActivity.MODE_PRIVATE)
     val editor = preferences.edit()
-    editor.putString("access_token", token)
+    editor.putString("jwt_token", token)
     editor.apply()
 }
 
@@ -19,5 +19,5 @@ fun saveId(context: Context, userId: String) {
 
 fun getAccessToken(context: Context): String? {
     val preferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
-    return preferences.getString("access_token", null)
+    return preferences.getString("jwt_token", null)
 }

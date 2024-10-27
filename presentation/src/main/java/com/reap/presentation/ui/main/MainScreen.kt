@@ -6,12 +6,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -69,14 +65,13 @@ import com.reap.data.getAccessToken
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
+import com.reap.presentation.ui.chat.ChatScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
-import com.reap.presentation.ui.login.LoginScreen
 import com.reap.presentation.ui.main.MainViewModel
 import com.reap.presentation.ui.main.UploadStatus
 import com.reap.presentation.ui.record.RecordScreen
 import com.reap.presentation.ui.selectedDateRecord.SelectedDateRecordScreen
-import com.reap.presentation.ui.splash.SplashScreen
 
 /**
  * Created by Beom_2 on 21.September.2024
@@ -143,6 +138,7 @@ private fun MainScreenNavigationConfigurations(
         homeScreen(navController, bottomBarState, mainViewModel)
         recordScreen(navController, bottomBarState)
         selectedDateRecordScreen(navController, bottomBarState)
+        chatScreen(navController, bottomBarState)
     }
 }
 
@@ -185,6 +181,20 @@ fun NavGraphBuilder.homeScreen(
         bottomBarState.value = true
 
         HomeScreen(navController, mainViewModel)
+    }
+}
+
+
+fun NavGraphBuilder.chatScreen(
+    navController: NavController,
+    bottomBarState: MutableState<Boolean>
+) {
+    composable(
+        route = NavRoutes.Chat.route
+    ) {
+        bottomBarState.value = false
+
+        ChatScreen(navController)
     }
 }
 
@@ -252,20 +262,19 @@ fun BottomNavigationBar(
 fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, mainViewModel: MainViewModel) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
+    val uploadStatus by mainViewModel.uploadStatus.collectAsState()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             if (isValidAudioFile(context, it)) {
-                mainViewModel.selectAudioFile(it)
+                mainViewModel.uploadAudioFile(it)
             } else {
                 // 유효하지 않은 파일 형식일 경우 사용자에게 알림
                 Toast.makeText(context, "유효하지 않은 오디오 파일입니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
-    val uploadStatus by mainViewModel.uploadStatus.collectAsState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -295,7 +304,7 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
                         painter = painterResource(id = com.reap.presentation.R.drawable.ic_mike),
                         contentDescription = "녹음",
                         modifier = Modifier
-                            .size(56.dp)
+                            .size(42.dp)
                             .background(
                                 color = colorResource(id = com.reap.presentation.R.color.cement_2),
                                 shape = RoundedCornerShape(24.dp) // 반원 형태
@@ -316,7 +325,7 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
                         painter = painterResource(id = com.reap.presentation.R.drawable.ic_upload),
                         contentDescription = "업로드",
                         modifier = Modifier
-                            .size(56.dp)
+                            .size(42.dp)
                             .background(
                                 color = colorResource(id = com.reap.presentation.R.color.cement_2),
                                 shape = RoundedCornerShape(24.dp)
@@ -330,9 +339,19 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
 
             when (uploadStatus) {
                 is UploadStatus.Uploading -> CircularProgressIndicator()
-                is UploadStatus.Success -> Text("업로드 성공! 파일 ID: ${(uploadStatus as UploadStatus.Success).fileId}")
+                is UploadStatus.Success -> {
+                    Toast.makeText(
+                        LocalContext.current,
+                        "업로드 성공! 파일 ID: ${(uploadStatus as UploadStatus.Success).fileId}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 is UploadStatus.Error -> {
-                    Text("업로드 실패: ${(uploadStatus as UploadStatus.Error).message}")
+                    Toast.makeText(
+                        LocalContext.current,
+                        "업로드 실패: ${(uploadStatus as UploadStatus.Error).message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     Log.e("Main", "${(uploadStatus as UploadStatus.Error).message}")
                 }
                 else -> {}
@@ -357,7 +376,7 @@ fun isValidAudioFile(context: Context, uri: Uri): Boolean {
         return false
     }
 
-    // 추가적인 안전성 검사를 여기에 구현할 수 있습니다.
+    // 추가적인 안전성 검사를 여기에 구현 가능
     // 예: 파일 헤더 검사, 악성코드 스캔 등
 
     return true

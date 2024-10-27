@@ -1,5 +1,6 @@
 package com.reap.presentation.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,10 +15,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.reap.domain.model.RecentlyRecording
+import com.reap.domain.model.RecordingMetaData
 
 @Composable
-fun RecordItemList(recordings: List<RecentlyRecording>) {
+fun RecordItemList(recordings: List<RecordingMetaData>) {
     Text(
         modifier = Modifier
             .padding(bottom = 10.dp, top = 30.dp),
@@ -30,17 +31,18 @@ fun RecordItemList(recordings: List<RecentlyRecording>) {
         modifier = Modifier.fillMaxWidth()
     ) {
         recordings.forEach { recording ->
-            RecordingItem(recording)
+            RecordingItem(recording, {})
         }
     }
 }
 
 @Composable
-fun RecordingItem(recording: RecentlyRecording) {
+fun RecordingItem(recording: RecordingMetaData, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
     ) {

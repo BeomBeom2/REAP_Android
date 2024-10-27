@@ -33,6 +33,8 @@ fun HomeScreen(
         mainViewModel.onUploadSuccess.collect {
             Log.d("HomeScreen", "Upload success event received")
             homeViewModel.getHomeRecentlyRecodingData()
+
+            mainViewModel.resetUploadSuccess()
         }
     }
 
