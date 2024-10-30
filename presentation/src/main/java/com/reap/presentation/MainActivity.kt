@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
             REAPComposableTheme(darkTheme = false) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     MainScreen()
+
                 }
             }
         }

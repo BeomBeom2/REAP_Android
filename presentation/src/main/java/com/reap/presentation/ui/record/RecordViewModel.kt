@@ -61,10 +61,9 @@ class RecordViewModel @Inject constructor(
             try {
                 val mediaPart = prepareFilePart(uri)
                 val fileId = postRecognizeUrlUseCase(topic, mediaPart)
-                //_audioFileId.value = fileId
                 _uploadStatus.value = UploadStatus.Success(fileId)
             } catch (e: Exception) {
-                _uploadStatus.value = UploadStatus.Error(e.message ?: "An unknown error occurred.")
+                _uploadStatus.value = UploadStatus.Error(e.message ?: "파일 업로드 중 에러가 발생했습니다.")
             }
         }
     }
@@ -91,14 +90,6 @@ class RecordViewModel @Inject constructor(
         val uri = Uri.fromFile(File(recorder.currentFilePath))
         viewModelScope.launch {
             uploadAudioFile(uri, topic)
-        }
-    }
-
-    private fun uploadFile(fileUri: Uri) {
-        viewModelScope.launch {
-            // 가정: 저장소 함수를 통해 업로드 처리
-            // repository.uploadAudioFile(fileUri)
-            // 업로드 응답 또는 오류 처리
         }
     }
 
@@ -192,6 +183,7 @@ class RecordViewModel @Inject constructor(
                 input.copyTo(output)
             }
         }
+        Log.d("RecordViewModel", "Filename: $originalFileName, MIME Type: $mimeType")
 
         val requestFile = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData("media", originalFileName, requestFile)

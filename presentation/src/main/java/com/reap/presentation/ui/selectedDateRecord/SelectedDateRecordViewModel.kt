@@ -3,7 +3,7 @@ package com.reap.presentation.ui.selectedDateRecord
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.reap.domain.model.RecordingDetailData
+import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordDetailUseCase
 import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordUseCase
@@ -27,8 +27,8 @@ class SelectedDateRecordViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _selectedRecordingDetails = MutableStateFlow<RecordingDetailData?>(null)
-    val selectedRecordingDetails: StateFlow<RecordingDetailData?> = _selectedRecordingDetails
+    private val _selectedRecordingDetails = MutableStateFlow<List<RecordingDetail>?>(null)
+    val selectedRecordingDetails: StateFlow<List<RecordingDetail>?> = _selectedRecordingDetails
 
     private val _screenState = MutableStateFlow(ScreenState.RECORD_LIST)
     val screenState: StateFlow<ScreenState> = _screenState

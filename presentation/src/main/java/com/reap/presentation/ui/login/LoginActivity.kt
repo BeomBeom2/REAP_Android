@@ -27,13 +27,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,16 +47,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reap.data.saveAccessToken
+import com.reap.data.saveNickname
 import com.reap.presentation.MainActivity
 import com.reap.presentation.R
 import com.reap.presentation.common.theme.REAPComposableTheme
-import com.reap.presentation.ui.home.calendar.clickable
 import com.reap.presentation.ui.splash.SplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -100,12 +95,18 @@ class LoginActivity : ComponentActivity() {
         kakaoLoginLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val data = result.data
                 val accessToken = data?.getStringExtra("accessToken")
+                val nickname = data?.getStringExtra("nickname") // 닉네임 가져오기
 
                 if (accessToken != null) {
                     loginViewModel.getAccessToken(accessToken)
+
+                    // 닉네임이 존재하면 저장
+                    if (nickname != null) {
+                        saveNickname(this, nickname)
+                    }
                 } else {
                     Toast.makeText(this, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
                 }
@@ -116,7 +117,6 @@ class LoginActivity : ComponentActivity() {
         }
     }
 }
-
 
 @Composable
 fun LoginScreen(
@@ -130,12 +130,11 @@ fun LoginScreen(
 
     accessTokenState.value?.let { result ->
         if (result.success) {
-            Log.e("LoginActivity", "카카오톡 jwt토큰 반환 성공 : ${result.jwtToken}")
+            Log.e("LoginActivity", "JWT토큰 반환 성공 : ${result.jwtToken}")
             saveAccessToken(context, result.jwtToken)
             onLogin()
-
         } else {
-            Log.e("LoginActivity", "카카오톡 jwt토큰 반환 실패")
+            Log.e("LoginActivity", "JWT토큰 반환 실패")
         }
     }
 
@@ -171,17 +170,14 @@ internal fun Login(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-
         Image(
             bitmap = ImageBitmap.imageResource(id = R.mipmap.ic_logo_foreground),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(120.dp)
+                .size(240.dp)
                 .padding(bottom = 16.dp)
         )
-
+/*
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -254,7 +250,7 @@ internal fun Login(
                 fontWeight = FontWeight.Bold
             )
         }
-
+*/
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(

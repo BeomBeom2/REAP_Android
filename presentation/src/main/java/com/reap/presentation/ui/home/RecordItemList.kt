@@ -30,8 +30,10 @@ fun RecordItemList(recordings: List<RecordingMetaData>) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        recordings.forEach { recording ->
-            RecordingItem(recording, {})
+        recordings.forEachIndexed { index, recording ->
+            if (index < 10) {
+                RecordingItem(recording, {})
+            }
         }
     }
 }

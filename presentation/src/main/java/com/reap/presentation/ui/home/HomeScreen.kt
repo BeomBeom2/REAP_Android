@@ -13,9 +13,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.reap.data.getNickname
 import com.reap.presentation.ui.home.calendar.CalendarCustom
 import com.reap.presentation.ui.main.MainViewModel
 
@@ -48,8 +50,6 @@ internal fun Home(
     val screenWidth = configuration.screenWidthDp.dp
     val sidePadding = screenWidth * 0.05f
     val scrollState = rememberScrollState()
-
-    // HomeViewModel의 데이터를 관찰
     val recordings by viewModel.recentlyRecordingData.collectAsState()
 
     Surface(color = com.reap.presentation.common.theme.BackgroundGray) {
@@ -59,7 +59,8 @@ internal fun Home(
                 .padding(horizontal = sidePadding)
                 .verticalScroll(scrollState)
         ) {
-            UserLabel("Reap", "Reap@Kakao.com")
+            val nickname = getNickname(LocalContext.current) ?: "Reap"
+            UserLabel(nickname, "Reap@Kakao.com")
 
             CalendarCustom(recordings, navController)
 

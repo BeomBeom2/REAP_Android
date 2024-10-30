@@ -1,12 +1,21 @@
 package com.reap.presentation.ui.selectedDateRecord
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,13 +30,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.reap.domain.model.RecordingDetailData
+import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.presentation.ui.home.RecordingItem
 import java.time.LocalDate
@@ -61,8 +71,8 @@ fun SelectedDateRecordScreen(
         recordingList = recordingList,
         screenState = screenState,
         selectedRecordingDetails = selectedRecordingDetails,
-        onRecordingClick = { selectedDate, recordingId ->
-            selectedDateRecordViewModel.fetchRecordingDetails(selectedDate, recordingId)
+        onRecordingClick = { date, recordingId ->
+            selectedDateRecordViewModel.fetchRecordingDetails(date, recordingId)
         },
         onBackPressed = {
             when (screenState) {
@@ -80,7 +90,7 @@ internal fun SelectedDateRecord(
     selectedDate: String,
     recordingList: List<RecordingMetaData>,
     screenState: ScreenState,
-    selectedRecordingDetails: RecordingDetailData?,
+    selectedRecordingDetails: List<RecordingDetail>?,
     onRecordingClick: (String, String) -> Unit,
     onBackPressed: () -> Unit
 ) {
@@ -104,14 +114,14 @@ internal fun SelectedDateRecord(
             navigationIcon = {
                 IconButton(onClick = onBackPressed) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "뒤로가기"
                     )
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .height(64.dp),
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
 
@@ -129,22 +139,70 @@ internal fun SelectedDateRecord(
                 }
             }
             ScreenState.RECORD_ERROR -> {
-                // 에러 상태일 때는 아무것도 표시하지 않음 (Toast로 처리)
+                Toast.makeText(LocalContext.current, "음성 변환 텍스트를 불러오는데 오류가 발생하였습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
 
 @Composable
-fun RecordingDetails(recordDetail: RecordingDetailData) {
-    Text(
-        text = recordDetail.text,
-        textAlign = TextAlign.Center,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Medium
-    )
+fun RecordingDetails(recordings: List<RecordingDetail>) {
+    val listState = rememberLazyListState()
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(recordings.size) { index ->
+            val recording = recordings[index]
+
+            val displayElapsedTime = if (recording.elapsedTime.startsWith("00:")) {
+                recording.elapsedTime.substring(3)
+            } else {
+                recording.elapsedTime
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .background(Color.White, shape = RoundedCornerShape(8.dp))
+            ) {
+                // 화자와 시간을 한 행에 두 열로 배치
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "화자 " + recording.speaker,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = displayElapsedTime, // 처리된 시간을 표시
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                // 메시지 텍스트를 다음 행에 배치
+                Text(
+                    text = recording.text,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+            }
+        }
+    }
 }
-
-/*
-
- */
