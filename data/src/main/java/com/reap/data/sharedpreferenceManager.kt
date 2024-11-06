@@ -30,6 +30,8 @@ fun saveNickname(context: Context, nickname: String) {
 }
 
 fun getNickname(context: Context): String? {
-    val preferences = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+    val preferences = context.getSharedPreferences("app_preferences", AppCompatActivity.MODE_PRIVATE)
     return preferences.getString("nickname", null)
 }
+
+

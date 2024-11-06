@@ -70,7 +70,7 @@ fun UserLabel(userNickName: String, userId: String) {
             )
 
             Text(
-                text = userId,
+                text = "whwjdqja20@naver.com",
                 fontSize = 14.sp,
                 color = colorResource(id = R.color.cement_4),
                 fontWeight = FontWeight.Medium,

@@ -10,14 +10,20 @@ class ChatRepositoryImpl @Inject constructor(
 ) : ChatRepository {
     override suspend fun postQuestion(question: String): String? {
         return try {
+            //getTestLoad()
+
             val response = chatapi.postQuestion(QuestionRequest(question = question))
             if (response.isSuccessful) {
-                response.body()?.answer // 서버 응답에서 answer 필드 추출
+                response.body()?.answer
             } else {
                 null
             }
         } catch (e: Exception) {
             null
         }
+    }
+
+    override suspend fun getTestLoad(): String {
+        return chatapi.getTestLoad()
     }
 }
