@@ -1,15 +1,18 @@
 package com.reap.presentation.ui.chat
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import androidx.core.content.ContextCompat
 import java.util.Locale
 
 class SpeechRecognizerHelper(
-    context: Context,
+    private val context: Context,
     private val onResult: (String) -> Unit,
     private val onError: (String) -> Unit = {}
 ) {
@@ -42,11 +45,15 @@ class SpeechRecognizerHelper(
     }
 
     fun startListening() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            }
+            speechRecognizer.startListening(intent)
+        } else {
+            onError("음성 인식 권한이 필요합니다.")
         }
-        speechRecognizer.startListening(intent)
     }
 
     fun stopListening() {

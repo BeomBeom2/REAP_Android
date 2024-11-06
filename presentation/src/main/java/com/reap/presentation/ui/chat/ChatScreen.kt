@@ -1,6 +1,10 @@
 package com.reap.presentation.ui.chat
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,12 +63,13 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reap.presentation.R
 import com.reap.presentation.ui.home.calendar.clickable
 import kotlinx.coroutines.launch
-
 @Composable
 fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel = hiltViewModel()) {
     val messages by chatViewModel.messages.collectAsState()
@@ -107,6 +112,8 @@ internal fun Chat(
                 ttsHelper.speak(message.text)
             }
         }
+
+        listState.animateScrollToItem(messages.size)
     }
 
     Scaffold(
@@ -122,7 +129,6 @@ internal fun Chat(
                     }
                 },
                 actions = {
-                    // 점 3개 메뉴 버튼
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
@@ -130,7 +136,6 @@ internal fun Chat(
                         )
                     }
 
-                    // 드롭다운 메뉴
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
@@ -141,12 +146,11 @@ internal fun Chat(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text("음성 응답 자동 듣기")
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(24.dp))
                                     Switch(
                                         checked = isAutoPlayEnabled,
                                         onCheckedChange = {
                                             isAutoPlayEnabled = it
-                                            menuExpanded = false // 스위치를 변경하면 메뉴 닫기
                                         },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = colorResource(id = R.color.signature_1),
@@ -155,7 +159,7 @@ internal fun Chat(
                                             uncheckedBorderColor = colorResource(id = R.color.cement_4),
                                             checkedBorderColor = colorResource(id = R.color.cement_4)
                                         ),
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(24.dp)
                                     )
                                 }
                             },
@@ -189,7 +193,7 @@ internal fun Chat(
                 }
 
                 LazyColumn(
-                    state = listState,
+                    //state = listState,
                     modifier = Modifier.weight(1f),
                     reverseLayout = false
                 ) {
@@ -204,29 +208,42 @@ internal fun Chat(
                     }
                 }
 
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    UserInput(
+                        onSendMessage = { text ->
+                            onSendMessage(text)
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(messages.size)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding(),
+                        onFocusChanged = { focused ->
+                            keyboardVisible = focused
+                        }
+                    )
+
+                    // 로딩 중일 때만 작게 표시되는 로딩 인디케이터
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(bottom = 64.dp)
+                                .size(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
+
             }
 
-            UserInput(
-                onSendMessage = { text ->
-                    onSendMessage(text)
-                    coroutineScope.launch {
-                        listState.animateScrollToItem(messages.size)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding(),
-                onFocusChanged = { focused ->
-                    keyboardVisible = focused
-                }
-            )
+
         }
     }
 }
-
 
 @Composable
 fun MessageBubble(
@@ -237,6 +254,17 @@ fun MessageBubble(
     val alignment = if (message.isFromUser) Alignment.CenterEnd else Alignment.CenterStart
     val maxWidthFraction = 0.8f // 메시지 너비를 화면의 80%로 제한
 
+    val shape = if (message.isFromUser) {
+        RoundedCornerShape(8.dp)
+    } else {
+        RoundedCornerShape(
+            topStart = 8.dp,
+            topEnd = 8.dp,
+            bottomStart = 8.dp,
+            bottomEnd = 0.dp
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -245,20 +273,15 @@ fun MessageBubble(
     ) {
         Row(
             modifier = Modifier,
-            verticalAlignment = Alignment.Bottom // 아이콘이 텍스트의 하단에 정렬되도록 설정
+            verticalAlignment = Alignment.Bottom
         ) {
-            // Text 메시지에 배경색과 라운딩 적용 및 너비 제한
             Card(
                 colors = CardDefaults.cardColors(containerColor = backgroundColor),
-                shape = RoundedCornerShape(
-                    topStart = 8.dp,
-                    topEnd = 8.dp,
-                    bottomStart = 8.dp
-                )
+                shape = shape
             ) {
                 Text(
                     text = message.text,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
                         .padding(8.dp)
                         .wrapContentWidth()
@@ -267,12 +290,11 @@ fun MessageBubble(
             }
 
 
-            // 스피커 아이콘에 배경색과 라운딩 적용
             if (!message.isFromUser) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.Bottom) // 아이콘을 텍스트의 하단에 정렬
-                        .size(24.dp) // 아이콘 버튼 크기 설정
+                        .align(Alignment.Bottom)
+                        .size(28.dp)
                         .background(
                             color = backgroundColor,
                             shape = RoundedCornerShape(
@@ -287,7 +309,7 @@ fun MessageBubble(
                         painter = painterResource(id = R.drawable.ic_speaker),
                         contentDescription = "Play audio",
                         modifier = Modifier
-                            .size(18.dp) // 아이콘 자체 크기 설정
+                            .size(21.dp) // 아이콘 자체 크기 설정
                             .clickable { onPlayAudio() },
                     )
                 }
@@ -306,20 +328,38 @@ fun UserInput(
     var text by remember { mutableStateOf("") }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope()
+    var isListening by remember { mutableStateOf(false) } // 모달 표시 상태
 
     // Initialize SpeechRecognizerHelper
     val speechRecognizerHelper = remember {
         SpeechRecognizerHelper(
             context = context,
-            onResult = { result -> text = result }, // Update text with speech recognition result
-            onError = { error -> Toast.makeText(context, error, Toast.LENGTH_SHORT).show() }
+            onResult = { result ->
+                text = result
+                isListening = false // 음성 인식이 종료되면 모달 닫기
+            },
+            onError = { error ->
+                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                isListening = false // 에러 발생 시 모달 닫기
+            }
         )
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            speechRecognizerHelper.destroy() // Release resources when composable is disposed
+            speechRecognizerHelper.destroy()
+        }
+    }
+
+    // 권한 요청을 위한 런처
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isListening = true // 모달 표시
+            speechRecognizerHelper.startListening()
+        } else {
+            Toast.makeText(context, "음성 인식 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -334,7 +374,14 @@ fun UserInput(
         )
 
         // Voice input button
-        IconButton(onClick = { speechRecognizerHelper.startListening() }) {
+        IconButton(onClick = {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                isListening = true // 모달 표시
+                speechRecognizerHelper.startListening()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_voice_search),
                 contentDescription = "음성 검색"
@@ -352,7 +399,27 @@ fun UserInput(
             Icon(Icons.Default.Send, contentDescription = "Send")
         }
     }
+
+    // 음성 인식 중일 때 모달 창 표시
+    if (isListening) {
+        Dialog(onDismissRequest = { isListening = false }) {
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(Color.White, shape = RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Reap가 당신의 목소리를 듣고 있어요",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+    }
 }
+
 
 data class Message(
     val text: String,      // 메시지 내용
