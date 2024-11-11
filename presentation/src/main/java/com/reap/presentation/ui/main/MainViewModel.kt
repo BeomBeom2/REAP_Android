@@ -5,7 +5,6 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.reap.domain.usecase.main.PostRecognizeUrlUseCase
@@ -38,7 +37,7 @@ class MainViewModel @Inject constructor(
             try {
                 Log.e("MainViewModel", "uploadAudioFile")
                 val mediaPart = prepareFilePart(uri)
-                val fileId = postRecognizeUrlUseCase.invoke("TEST", mediaPart)
+                val fileId = postRecognizeUrlUseCase("TEST", mediaPart)
                 _uploadStatus.value = UploadStatus.Success(fileId)
                 _onUploadSuccess.value = true
             } catch (e: Exception) {
@@ -56,17 +55,7 @@ class MainViewModel @Inject constructor(
         val originalFileName = getOriginalFileName(contentResolver, fileUri)
 
         // MIME 타입 가져오기
-        val mimeType = "audio/mp4" // contentResolver.getType(fileUri) ?: "audio/mp4"
-
-        // MIME 타입에 따른 확장자 추출
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "unknown"
-
-        // 파일 이름에 확장자 추가
-//        val filenameWithExtension = if (originalFileName.contains('.')) {
-//            originalFileName // 이미 확장자가 있는 경우 그대로 사용
-//        } else {
-//            "$originalFileName.$extension" // 확장자를 추가
-//        }
+        val mimeType = contentResolver.getType(fileUri) ?: "audio/mp4"
 
         Log.e("MainViewModel", "Filename: $originalFileName, MIME Type: $mimeType")
 
@@ -80,11 +69,10 @@ class MainViewModel @Inject constructor(
             }
         }
 
-        val requestFile = tempFile.asRequestBody(mimeType?.toMediaTypeOrNull())
+        val requestFile = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData("media", originalFileName, requestFile)
     }
 
-    // URI에서 파일 이름을 안전하게 추출하는 함수
     private fun getOriginalFileName(contentResolver: ContentResolver, fileUri: Uri): String {
         var fileName = "unknown_file"
         contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
@@ -102,8 +90,8 @@ class MainViewModel @Inject constructor(
 }
 
 sealed class UploadStatus {
-    object Idle : UploadStatus()
-    object Uploading : UploadStatus()
+    data object Idle : UploadStatus()
+    data object Uploading : UploadStatus()
     data class Success(val fileId: String) : UploadStatus()
     data class Error(val message: String) : UploadStatus()
 }

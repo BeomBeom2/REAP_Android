@@ -7,6 +7,8 @@ import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordDetailUseCase
 import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordUseCase
+import com.reap.domain.usecase.home.DeleteRecordUseCase
+import com.reap.domain.usecase.home.PutUpdateTopicAndFileNameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SelectedDateRecordViewModel @Inject constructor(
     private val getSelectedDateRecordUseCase: GetSelectedDateRecordUseCase,
-    private val getSelectedDateRecordDetailUseCase: GetSelectedDateRecordDetailUseCase
+    private val getSelectedDateRecordDetailUseCase: GetSelectedDateRecordDetailUseCase,
+    private val putUpdateTopicAnfFileNameUseCase : PutUpdateTopicAndFileNameUseCase,
+    private val deleteRecordUseCase : DeleteRecordUseCase
 ) : ViewModel() {
 
     // StateFlow를 리스트 형식으로 변경
@@ -25,7 +29,6 @@ class SelectedDateRecordViewModel @Inject constructor(
     val selectedDateRecordData: StateFlow<List<RecordingMetaData>> = _selectedDateRecordData.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _selectedRecordingDetails = MutableStateFlow<List<RecordingDetail>?>(null)
     val selectedRecordingDetails: StateFlow<List<RecordingDetail>?> = _selectedRecordingDetails
@@ -36,29 +39,48 @@ class SelectedDateRecordViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private val _date = MutableStateFlow<String?>(null)
+
     fun getSelectedDateRecordData(date : String) {
         viewModelScope.launch {
             try {
-                // UseCase를 호출하여 데이터를 가져옴
+                _date.value = date
                 val response = getSelectedDateRecordUseCase(date)
-
-                // JSON 응답을 RecentlyRecording 데이터 클래스로 매핑
                 val recordingData = response.map {
                     RecordingMetaData(
+                        recordId = it.recordId,
                         fileName = it.fileName,
                         uploadedDate = it.uploadedDate,
                         recordedDate = it.recordedDate,
-                        topic = it.topic ?: "[강의]",
+                        topic = it.topic,
                         uploadedTime = it.uploadedTime
                     )
                 }
-
-                // 리스트 데이터를 StateFlow에 반영
                 _selectedDateRecordData.value = recordingData
 
             } catch (e: Exception) {
-                // 오류 처리
-                Log.e("SelectedDateRecordViewModel", "Error fetching recording data: ${e.message}")
+                Log.e("SelectedDateRecordViewModel", "From getSelectedDateRecordData, Err is ${e.message}")
+            }
+        }
+    }
+    suspend fun updateTopicAndFileName(scriptId: String, newName: String, newTopic: String): Pair<String, String> {
+        return try {
+            val response = putUpdateTopicAnfFileNameUseCase(scriptId, newName, newTopic)
+            _date.value?.let { getSelectedDateRecordData(it) }
+            Pair(response.modifiedTopic, response.modifiedRecordName)
+        } catch (e: Exception) {
+            Log.e("SelectedDateRecordViewModel", "From updateTopicAndFileName, Err is ${e.message}")
+            Pair("", "")
+        }
+    }
+
+    fun deleteRecord(date : String, fileName : String, recordId : String) {
+        viewModelScope.launch{
+            try{
+                deleteRecordUseCase(date, fileName, recordId)
+                _date.value?.let { getSelectedDateRecordData(it) }
+            } catch(e : Exception) {
+                Log.e("SelectedDateRecordViewModel", "From deleteRecord, Err is ${e.message}")
             }
         }
     }
@@ -71,6 +93,7 @@ class SelectedDateRecordViewModel @Inject constructor(
                 _selectedRecordingDetails.value = details
                 _screenState.value = ScreenState.RECORD_SCRIPT
             } catch (e: Exception) {
+                Log.e("SelectedDateRecordViewModel", "From fetchRecordingDetails, Err is ${e.message}")
                 _screenState.value = ScreenState.RECORD_ERROR
                 _errorMessage.value = "불러오기 실패"
             } finally {

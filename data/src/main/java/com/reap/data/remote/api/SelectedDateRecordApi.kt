@@ -7,14 +7,14 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface SelectedDateRecordApi {
-    @GET("/auth/api/detail/{recordedDate}/record-script")
+    @GET("/api/auth/meta/{date}")
     suspend fun getSelectedDateRecord(
-        @Path("recordedDate") recordedDate: String,
+        @Path("date") date: String,
     ): List<RecordingMetaData>
 
-    @GET("/auth/api/detail/{recordedDate}/total-script")
+    @GET("/api/auth/script/{date}")
     suspend fun getSelectedDateRecordDetail(
-        @Path("recordedDate") recordedDate: String,
+        @Path("date") date: String,
         @Query("recordName") recordName: String,
     ): List<RecordingDetail>
 }

@@ -1,6 +1,7 @@
 package com.reap.domain.model
 
 data class RecordingMetaData(
+    val recordId : String,
     val fileName : String,
     val uploadedDate : String,
     val topic : String,

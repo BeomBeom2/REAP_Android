@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +40,7 @@ import androidx.navigation.NavController
 import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.presentation.ui.home.RecordingItem
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -48,36 +49,45 @@ fun SelectedDateRecordScreen(
     navController: NavController,
     selectedDate: String
 ) {
-    val selectedDateRecordViewModel: SelectedDateRecordViewModel = hiltViewModel()
-    val recordingList by selectedDateRecordViewModel.selectedDateRecordData.collectAsState()
-    val screenState by selectedDateRecordViewModel.screenState.collectAsState()
-    val selectedRecordingDetails by selectedDateRecordViewModel.selectedRecordingDetails.collectAsState()
-    val errorMessage by selectedDateRecordViewModel.errorMessage.collectAsState()
-
+    val viewModel: SelectedDateRecordViewModel = hiltViewModel()
+    val recordingList by viewModel.selectedDateRecordData.collectAsState()
+    val screenState by viewModel.screenState.collectAsState()
+    val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(selectedDate) {
-        selectedDateRecordViewModel.getSelectedDateRecordData(selectedDate)
+        viewModel.getSelectedDateRecordData(selectedDate)
     }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             //Toast.makeText(LocalContext.current, it, Toast.LENGTH_SHORT).show()
-            selectedDateRecordViewModel.resetToList()
+            viewModel.resetToList()
         }
     }
 
     SelectedDateRecord(
-        navController = navController,
         selectedDate = selectedDate,
         recordingList = recordingList,
         screenState = screenState,
         selectedRecordingDetails = selectedRecordingDetails,
-        onRecordingClick = { date, recordingId ->
-            selectedDateRecordViewModel.fetchRecordingDetails(date, recordingId)
+        onItemClick = { date, recordingId ->
+            viewModel.fetchRecordingDetails(date, recordingId)
         },
         onBackPressed = {
             when (screenState) {
                 ScreenState.RECORD_LIST -> navController.popBackStack()
-                else -> selectedDateRecordViewModel.resetToList()
+                else -> viewModel.resetToList()
+            }
+        },
+        onMenuClick = { scriptId, newName, newTopic ->
+            coroutineScope.launch {
+                viewModel.updateTopicAndFileName(scriptId, newName, newTopic)
+            }
+        },
+        onDeleteClick = { scriptId, newName, newTopic ->
+            coroutineScope.launch {
+                viewModel.deleteRecord(scriptId, newName, newTopic)
             }
         }
     )
@@ -86,13 +96,14 @@ fun SelectedDateRecordScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SelectedDateRecord(
-    navController: NavController,
     selectedDate: String,
     recordingList: List<RecordingMetaData>,
     screenState: ScreenState,
     selectedRecordingDetails: List<RecordingDetail>?,
-    onRecordingClick: (String, String) -> Unit,
-    onBackPressed: () -> Unit
+    onItemClick: (String, String) -> Unit,
+    onBackPressed: () -> Unit,
+    onMenuClick : (String, String, String) -> Unit,
+    onDeleteClick : (String, String, String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
@@ -125,11 +136,12 @@ internal fun SelectedDateRecord(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
         )
 
+
         when (screenState) {
             ScreenState.RECORD_LIST -> {
                 Column(modifier = Modifier.padding(16.dp)) {
                     recordingList.forEach { recording ->
-                        RecordingItem(recording) { onRecordingClick(selectedDate, recording.fileName) }
+                        RecordingItem(recording, onMenuClick, onDeleteClick, onItemClick)
                     }
                 }
             }
