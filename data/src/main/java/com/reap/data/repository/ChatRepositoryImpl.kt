@@ -11,9 +11,9 @@ import javax.inject.Inject
 class ChatRepositoryImpl @Inject constructor(
     private val chatApi: ChatApi
 ) : ChatRepository {
-    override suspend fun postQuestion(question: String): String? {
+    override suspend fun postQuestionStream(question: String): String? {
         return try {
-            val response = chatApi.postQuestion(QuestionRequest(question = question))
+            val response = chatApi.postQuestionStream(QuestionRequest(question = question))
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
                     parseStreamResponse(responseBody)
@@ -23,6 +23,19 @@ class ChatRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            null
+        }
+    }
+
+    override suspend fun postQuestion(question: String): String? {
+        return try {
+            val response = chatApi.postQuestion(QuestionRequest(question = question))
+            if (response.isSuccessful) {
+                response.body()?.answer
+            } else {
+                null
+            }
+        } catch (e: Exception) {
             null
         }
     }

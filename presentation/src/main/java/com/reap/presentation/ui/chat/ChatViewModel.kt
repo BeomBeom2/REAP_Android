@@ -12,7 +12,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val postQuestionUseCase: PostQuestionUseCase
+    private val postQuestionUseCase: PostQuestionUseCase,
+    private val postQuestionStreamUseCase: PostQuestionUseCase
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -25,7 +26,7 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(question: String) {
         viewModelScope.launch {
             val newMessage = Message(text = question, isFromUser = true)
-            _messages.value = _messages.value + newMessage
+            _messages.value += newMessage
 
             _isLoading.value = true
 
@@ -34,7 +35,7 @@ class ChatViewModel @Inject constructor(
 
             response?.let { responseMessage ->
                 val receivedMessage = Message(text = responseMessage, isFromUser = false)
-                _messages.value = _messages.value + receivedMessage
+                _messages.value += receivedMessage
             }
         }
     }
