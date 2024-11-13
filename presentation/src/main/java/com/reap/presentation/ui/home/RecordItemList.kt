@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -17,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +76,8 @@ fun RecordingItem(
     var showInputDialog by remember { mutableStateOf(false) }
     var isNameChange by remember { mutableStateOf(true) }
     var inputText by remember { mutableStateOf("") }
+    val topics = listOf("일상", "강의", "대화", "회의")
+    var selectedTopic by remember { mutableStateOf(topics[0]) } // 첫 번째 값으로 초기화
 
     RecordingContent(recording, onItemClick) {
         showBottomSheet = true
@@ -104,37 +110,78 @@ fun RecordingItem(
     }
 
     if (showInputDialog) {
-        AlertDialog(
-            onDismissRequest = { showInputDialog = false },
-            title = { Text(if (isNameChange) "이름 변경" else "주제 변경") },
-            text = {
-                TextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    placeholder = { Text("새로운 값을 입력하세요") }
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showInputDialog = false
-                    if (isNameChange) {
+        if (isNameChange) {
+            // 이름 변경 다이얼로그
+            AlertDialog(
+                onDismissRequest = { showInputDialog = false },
+                title = { Text("이름 변경") },
+                text = {
+                    TextField(
+                        value = inputText,
+                        onValueChange = { inputText = it },
+                        placeholder = { Text("새로운 이름을 입력하세요") }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showInputDialog = false
                         onMenuClick(recording.recordId, inputText, recording.topic)
-                    } else {
-                        onMenuClick(recording.recordId, recording.fileName, inputText)
+                        inputText = ""
+                    }) {
+                        Text("확인")
                     }
-                    inputText = ""
-                }) {
-                    Text("확인")
+                },
+                dismissButton = {
+                    TextButton(onClick = { showInputDialog = false }) {
+                        Text("취소")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showInputDialog = false }) {
-                    Text("취소")
+            )
+        } else {
+            // 주제 변경 다이얼로그
+            AlertDialog(
+                onDismissRequest = { showInputDialog = false },
+                title = { Text("주제 변경") },
+                text = {
+                    Column {
+                        topics.forEach { topic ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .selectable(
+                                        selected = (topic == selectedTopic),
+                                        onClick = { selectedTopic = topic }
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = (topic == selectedTopic),
+                                    onClick = { selectedTopic = topic }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(topic)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showInputDialog = false
+                        onMenuClick(recording.recordId, recording.fileName, selectedTopic)
+                    }) {
+                        Text("확인")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showInputDialog = false }) {
+                        Text("취소")
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
+
 
 @Composable
 fun RecordingContent(recording: RecordingMetaData, onItemClick: (String, String) -> Unit, onMenuClick: () -> Unit,) {

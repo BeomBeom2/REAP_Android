@@ -67,6 +67,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.reap.presentation.R
 import com.reap.presentation.ui.home.calendar.clickable
 import kotlinx.coroutines.launch
@@ -335,8 +339,9 @@ fun UserInput(
         SpeechRecognizerHelper(
             context = context,
             onResult = { result ->
-                text = result
-                isListening = false // 음성 인식이 종료되면 모달 닫기
+                onSendMessage(result)  // 음성 인식 결과를 바로 전송
+                text = ""              // 텍스트 입력 필드 비우기
+                isListening = false    // 음성 인식 종료
             },
             onError = { error ->
                 Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
@@ -406,17 +411,18 @@ fun UserInput(
             Box(
                 modifier = Modifier
                     .size(200.dp)
-                    .background(Color.White, shape = RoundedCornerShape(8.dp)),
+                    .background(Color.Transparent, shape = RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Reap가 당신의 목소리를 듣고 있어요",
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.listening_animation))
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(150.dp)
                 )
             }
         }
+
     }
 }
 

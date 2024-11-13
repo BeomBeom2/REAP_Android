@@ -63,7 +63,7 @@ internal fun Home(
                 .verticalScroll(scrollState)
         ) {
             val nickname = getNickname(LocalContext.current) ?: "Reap"
-            UserLabel("Reap", "Reap@Kakao.com")
+            UserLabel(nickname, "")
 
             CalendarCustom(recordings, navController)
 

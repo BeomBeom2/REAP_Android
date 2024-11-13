@@ -85,6 +85,7 @@ dependencies {
 
     implementation(libs.androidx.material.icons.core)
     implementation(libs.kakao.user)
+    implementation(libs.lottie.compose)
 
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.android)

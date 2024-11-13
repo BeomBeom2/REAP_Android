@@ -98,13 +98,13 @@ fun MainScreen() {
 
 @Composable
 fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, mainViewModel: MainViewModel) {
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
     val showBottomSheet = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
             if (bottomBarState.value) {
                 BottomNavigationBar(
@@ -184,7 +184,6 @@ fun NavGraphBuilder.homeScreen(
     }
 }
 
-
 fun NavGraphBuilder.chatScreen(
     navController: NavController,
     bottomBarState: MutableState<Boolean>
@@ -197,7 +196,6 @@ fun NavGraphBuilder.chatScreen(
         ChatScreen(navController)
     }
 }
-
 
 @Composable
 fun BottomNavigationBar(
