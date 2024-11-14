@@ -21,7 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,10 +33,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -42,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -261,19 +267,73 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     val uploadStatus by mainViewModel.uploadStatus.collectAsState()
+    var selectedTopic by remember { mutableStateOf("일상") } // 주제 기본값 설정
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) } // 선택된 파일의 URI
+    var showTopicDialog by remember { mutableStateOf(false) } // 주제 선택 모달 창 표시 여부
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             if (isValidAudioFile(context, it)) {
-                mainViewModel.uploadAudioFile(it)
+                selectedFileUri = it // 파일 URI 저장
+                showTopicDialog = true // 주제 선택 모달 창 표시
             } else {
-                // 유효하지 않은 파일 형식일 경우 사용자에게 알림
                 Toast.makeText(context, "유효하지 않은 오디오 파일입니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    // 주제 선택 모달 창
+    if (showTopicDialog) {
+        AlertDialog(
+            onDismissRequest = { showTopicDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedFileUri?.let { uri ->
+                        mainViewModel.uploadAudioFile(uri, selectedTopic) // 선택된 주제와 파일 URI를 업로드
+                        showTopicDialog = false
+                    }
+                }) {
+                    Text("업로드")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTopicDialog = false }) {
+                    Text("취소")
+                }
+            },
+            title = { Text("주제 선택") },
+            text = {
+                Column {
+                    Text("파일을 업로드할 주제를 선택하세요:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val topics = listOf("일상", "강의", "대화", "회의")
+                    topics.forEach { topic ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = (selectedTopic == topic),
+                                    onClick = { selectedTopic = topic }
+                                )
+                                .padding(4.dp)
+                        ) {
+                            RadioButton(
+                                selected = (selectedTopic == topic),
+                                onClick = { selectedTopic = topic }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = topic)
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    // 바텀 시트 UI
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -305,12 +365,12 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
                             .size(42.dp)
                             .background(
                                 color = colorResource(id = com.reap.presentation.R.color.cement_2),
-                                shape = RoundedCornerShape(24.dp) // 반원 형태
+                                shape = RoundedCornerShape(24.dp)
                             )
                             .clickable {
-                                navController.navigate(NavRoutes.Record.route) {  }
+                                navController.navigate(NavRoutes.Record.route)
                                 onDismiss()
-                                }
+                            }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("녹음", style = MaterialTheme.typography.bodyMedium)
@@ -339,24 +399,27 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
                 is UploadStatus.Uploading -> CircularProgressIndicator()
                 is UploadStatus.Success -> {
                     Toast.makeText(
-                        LocalContext.current,
+                        context,
                         "업로드 성공! 파일 ID: ${(uploadStatus as UploadStatus.Success).fileId}",
                         Toast.LENGTH_SHORT
                     ).show()
+                    mainViewModel.resetUploadSuccess()
                 }
                 is UploadStatus.Error -> {
                     Toast.makeText(
-                        LocalContext.current,
+                        context,
                         "업로드 실패: ${(uploadStatus as UploadStatus.Error).message}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    Log.e("Main", "${(uploadStatus as UploadStatus.Error).message}")
+                    mainViewModel.resetUploadSuccess()
                 }
-                else -> {}
+                else -> { mainViewModel.resetUploadSuccess()}
             }
         }
     }
 }
+
+
 
 fun isValidAudioFile(context: Context, uri: Uri): Boolean {
     val contentResolver = context.contentResolver

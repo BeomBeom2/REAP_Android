@@ -68,6 +68,10 @@ class RecordViewModel @Inject constructor(
         }
     }
 
+    fun resetUploadStatus() {
+        _uploadStatus.value = UploadStatus.Idle
+    }
+
     fun startRecording(fileName : String) {
         val filePath = getApplication<Application>().filesDir.absolutePath + "/$fileName.m4a"
         recorder.startRecording(filePath)
@@ -83,15 +87,36 @@ class RecordViewModel @Inject constructor(
         }
     }
 
-    fun stopRecordingAndUpload(topic : String) {
+    fun stopRecordingAndUpload(topic: String, fileName: String) {
         recorder.stopRecording()
         _recordingState.value = RecordingState.IDLE
         stopTimer()
-        val uri = Uri.fromFile(File(recorder.currentFilePath))
-        viewModelScope.launch {
-            uploadAudioFile(uri, topic)
+
+        // 기존 임시 파일 경로
+        val tempFilePath = recorder.currentFilePath
+        val tempFile = File(tempFilePath)
+
+        // 사용자 지정 파일 이름으로 새로운 파일 경로 생성
+        val newFilePath = tempFile.parent + "/$fileName.m4a"
+        val newFile = File(newFilePath)
+
+        // 파일 이름 변경 시도 (같은 디렉터리 내에서 이름 변경이므로 renameTo 사용)
+        val success = tempFile.renameTo(newFile)
+        if (success) {
+            // 이름 변경 실패 시 처리 로직 (필요 시 로그 등 추가)
+            Log.d("RecordViewModel", "$fileName 이름 변경에 실패")
+
+            // 새 파일 경로를 URI로 변환
+            val uri = Uri.fromFile(newFile)
+            recorder.currentFilePath = newFilePath
+            // 파일 업로드 실행
+            viewModelScope.launch {
+                uploadAudioFile(uri, topic)
+            }
         }
     }
+
+
 
     private fun startTimer() {
         timerJob = viewModelScope.launch {

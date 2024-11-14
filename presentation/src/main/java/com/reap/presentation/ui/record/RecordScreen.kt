@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,11 +17,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -49,6 +54,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.reap.presentation.R
+import com.reap.presentation.ui.main.UploadStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -61,7 +67,7 @@ fun RecordScreen(navController: NavController, context: Context) {
 
     when {
         permissionState.status.isGranted -> {
-            Record(navController, viewModel)
+            Record(navController, viewModel, context)
         }
         permissionState.status.shouldShowRationale -> {
             SettingsRedirectDialog(navController, context)
@@ -77,22 +83,37 @@ fun RecordScreen(navController: NavController, context: Context) {
 @Composable
 internal fun Record(
     navController: NavController,
-    viewModel: RecordViewModel
+    viewModel: RecordViewModel,
+    context: Context
 ) {
     val recordingState by viewModel.recordingState.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
+    val uploadStatus by viewModel.uploadStatus.collectAsState()
     val recordingTime by viewModel.recordingTime.collectAsState()
     val volumeLevels by viewModel.volumeLevels.collectAsState()
     val currentTime = SimpleDateFormat("yyyy. MM. dd. a hh:mm 녹음", Locale.getDefault()).format(Date())
-
-    var showDialog by remember { mutableStateOf(false) }
     var topic by remember { mutableStateOf("") }
+    var fileName by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+
+
+    // 업로드 성공 시 Toast 메시지 표시 및 화면 종료 처리
+    if (uploadStatus is UploadStatus.Success) {
+        LaunchedEffect(Unit) {
+            Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+            viewModel.resetUploadStatus()
+        }
+    }
+
+
     if (showDialog) {
         TopicDialog(
-            topic = topic,
             onTopicChange = { topic = it },
+            onFileNameChange = {fileName = it},
+            fileName = fileName,
             onConfirm = {
-                viewModel.stopRecordingAndUpload(topic)
+                viewModel.stopRecordingAndUpload(topic, fileName)
                 showDialog = false
             },
             onDismiss = { showDialog = false }
@@ -220,18 +241,24 @@ internal fun Record(
     }
 }
 
-
 @Composable
 fun TopicDialog(
-    topic: String,
     onTopicChange: (String) -> Unit,
+    fileName: String,
+    onFileNameChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val topicOptions = listOf("강의", "일상", "대화", "회의")
+    var selectedTopic by remember { mutableStateOf("일상") }
+
     AlertDialog(
         onDismissRequest = { },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = {
+                onTopicChange(selectedTopic)
+                onConfirm()
+            }) {
                 Text("확인")
             }
         },
@@ -240,21 +267,53 @@ fun TopicDialog(
                 Text("취소")
             }
         },
-        title = { Text("토픽 지정") },
+        title = { Text("녹음 저장 정보") },
         text = {
             Column {
-                Text("녹음에 대한 토픽을 지정해주세요:")
+                Text("녹음에 대한 주제와 파일 이름을 지정해주세요:")
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // 토픽 선택 라디오 버튼
+                Column {
+                    Text("주제:")
+                    topicOptions.forEach { option ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .wrapContentWidth()
+                                .selectable(
+                                    selected = (selectedTopic == option),
+                                    onClick = { selectedTopic = option }
+                                )
+                                .padding(vertical = 4.dp) // 각 옵션 간의 간격 조절
+                        ) {
+                            RadioButton(
+                                selected = (selectedTopic == option),
+                                onClick = { selectedTopic = option }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp)) // 라디오 버튼과 텍스트 사이의 간격
+                            Text(
+                                text = option,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 파일 이름 입력 필드
                 TextField(
-                    value = topic,
-                    onValueChange = onTopicChange,
-                    label = { Text("토픽") },
+                    value = fileName,
+                    onValueChange = onFileNameChange,
+                    label = { Text("파일 이름") },
                     singleLine = true
                 )
             }
         }
     )
 }
+
 
 @Composable
 fun VolumeBar(volumeLevels: List<Int>) {
