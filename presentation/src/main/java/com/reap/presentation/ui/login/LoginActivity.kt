@@ -1,6 +1,5 @@
 package com.reap.presentation.ui.login
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -111,7 +110,7 @@ class LoginActivity : ComponentActivity() {
                     Toast.makeText(this, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
                 }
             } else { // 로그인 실패
-                Log.e("KakaoLogin", "카카오 로그인 실패")
+                Log.d("KakaoLogin", "카카오 로그인 실패")
                 Toast.makeText(this, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
             }
         }
@@ -130,11 +129,11 @@ fun LoginScreen(
 
     accessTokenState.value?.let { result ->
         if (result.success) {
-            Log.e("LoginActivity", "JWT토큰 반환 성공 : ${result.jwtToken}")
+            Log.d("LoginActivity", "AccessToken is ${result.jwtToken}")
             saveAccessToken(context, result.jwtToken)
             onLogin()
         } else {
-            Log.e("LoginActivity", "JWT토큰 반환 실패")
+            Log.d("LoginActivity", "JWT토큰 반환 실패")
         }
     }
 
@@ -177,80 +176,7 @@ internal fun Login(
                 .size(240.dp)
                 .padding(bottom = 16.dp)
         )
-/*
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("이메일") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colorResource(id = R.color.signature_1),
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black,
-            )
-        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("비밀번호") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colorResource(id = R.color.signature_1),
-                focusedLabelColor = Color.Black,
-                cursorColor = Color.Black,
-            )
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "회원가입",
-                modifier = Modifier.clickable { },
-                color = colorResource(id = R.color.cement_5),
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
-            Text(
-                text = " | ",
-                color = colorResource(id = R.color.cement_5),
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
-            Text(
-                text = "비밀번호 찾기",
-                modifier = Modifier.clickable { },
-                color = colorResource(id = R.color.cement_5),
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = { },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(colorResource(id = R.color.signature_1)),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Text(
-                "로그인", color = Color.Black, style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-*/
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(

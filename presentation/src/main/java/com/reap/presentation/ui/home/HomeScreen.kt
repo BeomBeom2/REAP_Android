@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.reap.data.getNickname
 import com.reap.presentation.ui.home.calendar.CalendarCustom
 import com.reap.presentation.ui.main.MainViewModel
+import com.reap.presentation.ui.main.UploadStatus
 import kotlinx.coroutines.launch
 
 @Composable
@@ -28,17 +29,19 @@ fun HomeScreen(
     navController: NavController,
     mainViewModel: MainViewModel
 ) {
-    val homeViewModel: HomeViewModel = hiltViewModel() // HomeViewModel 가져오기
+    val homeViewModel: HomeViewModel = hiltViewModel()
 
     LaunchedEffect(mainViewModel) {
-        Log.d("HomeScreen", "LaunchedEffect started")
         homeViewModel.getHomeRecentlyRecodingData()
 
-        mainViewModel.onUploadSuccess.collect {
-            Log.d("HomeScreen", "Upload success event received")
-            homeViewModel.getHomeRecentlyRecodingData()
-
-            mainViewModel.resetUploadSuccess()
+        mainViewModel.uploadStatus.collect {res ->
+            when(res) {
+                is UploadStatus.Success -> {
+                    Log.d("HomeScreen", "Upload success event received")
+                    homeViewModel.getHomeRecentlyRecodingData()
+                }
+                else -> { }
+            }
         }
     }
 
@@ -83,13 +86,3 @@ internal fun Home(
         }
     }
 }
-
-/*
-@Preview
-@Composable
-private fun HomeScreen() {
-    Home(
-        viewModel = hiltViewModel(),
-    )
-}
- */

@@ -74,6 +74,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.reap.presentation.R
 import com.reap.presentation.ui.home.calendar.clickable
 import kotlinx.coroutines.launch
+
 @Composable
 fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel = hiltViewModel()) {
     val messages by chatViewModel.messages.collectAsState()
@@ -87,6 +88,7 @@ fun ChatScreen(navController: NavController, chatViewModel: ChatViewModel = hilt
         onNavigateBack = { navController.popBackStack() }
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun Chat(
@@ -106,7 +108,7 @@ internal fun Chat(
 
     DisposableEffect(Unit) {
         onDispose {
-            ttsHelper.destroy() // TTS 리소스 해제
+            ttsHelper.destroy()
         }
     }
 
@@ -133,43 +135,13 @@ internal fun Chat(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options"
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("음성 응답 자동 듣기")
-                                    Spacer(modifier = Modifier.width(24.dp))
-                                    Switch(
-                                        checked = isAutoPlayEnabled,
-                                        onCheckedChange = {
-                                            isAutoPlayEnabled = it
-                                        },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = colorResource(id = R.color.signature_1),
-                                            checkedTrackColor = colorResource(id = R.color.white),
-                                            uncheckedTrackColor = colorResource(id = R.color.white),
-                                            uncheckedBorderColor = colorResource(id = R.color.cement_4),
-                                            checkedBorderColor = colorResource(id = R.color.cement_4)
-                                        ),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            },
-                            onClick = {} // 텍스트 자체는 클릭 불가능하게 설정
-                        )
-                    }
+                    ChatDropdownMenu(
+                        isAutoPlayEnabled = isAutoPlayEnabled,
+                        onAutoPlayToggle = { isAutoPlayEnabled = it },
+                        menuExpanded = menuExpanded,
+                        onDismissMenu = { menuExpanded = false },
+                        onExpandMenu = { menuExpanded = true }
+                    )
                 }
             )
         }
@@ -197,7 +169,6 @@ internal fun Chat(
                 }
 
                 LazyColumn(
-                    //state = listState,
                     modifier = Modifier.weight(1f),
                     reverseLayout = false
                 ) {
@@ -228,7 +199,6 @@ internal fun Chat(
                         }
                     )
 
-                    // 로딩 중일 때만 작게 표시되는 로딩 인디케이터
                     if (isLoading) {
                         Box(
                             modifier = Modifier
@@ -241,13 +211,159 @@ internal fun Chat(
                         }
                     }
                 }
-
             }
-
-
         }
     }
 }
+
+
+@Composable
+fun ChatDropdownMenu(
+    isAutoPlayEnabled: Boolean,
+    onAutoPlayToggle: (Boolean) -> Unit,
+    menuExpanded: Boolean,
+    onDismissMenu: () -> Unit,
+    onExpandMenu: () -> Unit
+) {
+    IconButton(onClick = onExpandMenu) {
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = "More options"
+        )
+    }
+
+    DropdownMenu(
+        expanded = menuExpanded,
+        onDismissRequest = onDismissMenu
+    ) {
+        DropdownMenuItem(
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("음성 응답 자동 듣기")
+                    Spacer(modifier = Modifier.width(24.dp))
+                    Switch(
+                        checked = isAutoPlayEnabled,
+                        onCheckedChange = onAutoPlayToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = colorResource(id = R.color.signature_1),
+                            checkedTrackColor = colorResource(id = R.color.white),
+                            uncheckedTrackColor = colorResource(id = R.color.white),
+                            uncheckedBorderColor = colorResource(id = R.color.cement_4),
+                            checkedBorderColor = colorResource(id = R.color.cement_4)
+                        ),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            onClick = {}
+        )
+    }
+}
+
+
+@Composable
+fun UserInput(
+    onSendMessage: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    onFocusChanged: (Boolean) -> Unit
+) {
+    var text by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    var isListening by remember { mutableStateOf(false) } // 모달 표시 상태
+
+    // Initialize SpeechRecognizerHelper
+    val speechRecognizerHelper = remember {
+        SpeechRecognizerHelper(
+            context = context,
+            onResult = { result ->
+                onSendMessage(result)  // 음성 인식 결과를 바로 전송
+                text = ""              // 텍스트 입력 필드 비우기
+                isListening = false    // 음성 인식 종료
+            },
+            onError = { error ->
+                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                isListening = false // 에러 발생 시 모달 닫기
+            }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            speechRecognizerHelper.destroy()
+        }
+    }
+
+    // 권한 요청을 위한 런처
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isListening = true // 모달 표시
+            speechRecognizerHelper.startListening()
+        } else {
+            Toast.makeText(context, "음성 인식 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    Row(modifier = modifier) {
+        TextField(
+            value = text,
+            onValueChange = { text = it },
+            modifier = Modifier
+                .weight(1f)
+                .onFocusChanged { onFocusChanged(it.isFocused) },
+            placeholder = { Text("Reap에게 질문하기...") }
+        )
+
+        IconButton(onClick = {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                isListening = true
+                speechRecognizerHelper.startListening()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_voice_search),
+                contentDescription = "음성 검색"
+            )
+        }
+
+        IconButton(onClick = {
+            if (text.isNotBlank()) {
+                onSendMessage(text)
+                text = ""
+                focusManager.clearFocus()
+            }
+        }) {
+            Icon(Icons.Default.Send, contentDescription = "Send")
+        }
+    }
+
+    // 음성 인식 중일 때 모달 창 표시
+    if (isListening) {
+        Dialog(onDismissRequest = { isListening = false }) {
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(Color.Transparent, shape = RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.listening_animation))
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(150.dp)
+                )
+            }
+        }
+
+    }
+}
+
 
 @Composable
 fun MessageBubble(
@@ -313,7 +429,7 @@ fun MessageBubble(
                         painter = painterResource(id = R.drawable.ic_speaker),
                         contentDescription = "Play audio",
                         modifier = Modifier
-                            .size(21.dp) // 아이콘 자체 크기 설정
+                            .size(21.dp)
                             .clickable { onPlayAudio() },
                     )
                 }
@@ -322,109 +438,6 @@ fun MessageBubble(
     }
 }
 
-
-@Composable
-fun UserInput(
-    onSendMessage: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    onFocusChanged: (Boolean) -> Unit
-) {
-    var text by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-    var isListening by remember { mutableStateOf(false) } // 모달 표시 상태
-
-    // Initialize SpeechRecognizerHelper
-    val speechRecognizerHelper = remember {
-        SpeechRecognizerHelper(
-            context = context,
-            onResult = { result ->
-                onSendMessage(result)  // 음성 인식 결과를 바로 전송
-                text = ""              // 텍스트 입력 필드 비우기
-                isListening = false    // 음성 인식 종료
-            },
-            onError = { error ->
-                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                isListening = false // 에러 발생 시 모달 닫기
-            }
-        )
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            speechRecognizerHelper.destroy()
-        }
-    }
-
-    // 권한 요청을 위한 런처
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            isListening = true // 모달 표시
-            speechRecognizerHelper.startListening()
-        } else {
-            Toast.makeText(context, "음성 인식 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    Row(modifier = modifier) {
-        TextField(
-            value = text,
-            onValueChange = { text = it },
-            modifier = Modifier
-                .weight(1f)
-                .onFocusChanged { onFocusChanged(it.isFocused) },
-            placeholder = { Text("Reap에게 질문하기...") }
-        )
-
-        // Voice input button
-        IconButton(onClick = {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                isListening = true // 모달 표시
-                speechRecognizerHelper.startListening()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            }
-        }) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_voice_search),
-                contentDescription = "음성 검색"
-            )
-        }
-
-        // Send message button
-        IconButton(onClick = {
-            if (text.isNotBlank()) {
-                onSendMessage(text)
-                text = ""
-                focusManager.clearFocus()
-            }
-        }) {
-            Icon(Icons.Default.Send, contentDescription = "Send")
-        }
-    }
-
-    // 음성 인식 중일 때 모달 창 표시
-    if (isListening) {
-        Dialog(onDismissRequest = { isListening = false }) {
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .background(Color.Transparent, shape = RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.listening_animation))
-                LottieAnimation(
-                    composition = composition,
-                    iterations = LottieConstants.IterateForever,
-                    modifier = Modifier.size(150.dp)
-                )
-            }
-        }
-
-    }
-}
 
 
 data class Message(

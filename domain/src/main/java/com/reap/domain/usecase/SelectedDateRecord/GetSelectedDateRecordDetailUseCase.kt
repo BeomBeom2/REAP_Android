@@ -9,7 +9,7 @@ import javax.inject.Singleton
 class GetSelectedDateRecordDetailUseCase @Inject constructor(
     private val selectedDateRecordRepository : SelectedDateRecordRepository
 ) {
-    suspend operator fun invoke(date : String, fileName : String) : List<RecordingDetail> {
-        return selectedDateRecordRepository.getSelectedDateRecordDetailUseCase(date, fileName)
+    suspend operator fun invoke(date : String, recordId : String) : List<RecordingDetail> {
+        return selectedDateRecordRepository.getSelectedDateRecordDetailUseCase(date, recordId)
     }
 }

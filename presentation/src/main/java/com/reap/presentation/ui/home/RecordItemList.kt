@@ -189,7 +189,7 @@ fun RecordingContent(recording: RecordingMetaData, onItemClick: (String, String)
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { onItemClick(recording.recordedDate, recording.fileName) },
+            .clickable { onItemClick(recording.recordedDate, recording.recordId) },
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
     ) {

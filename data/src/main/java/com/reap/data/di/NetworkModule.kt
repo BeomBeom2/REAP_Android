@@ -42,8 +42,8 @@ object NetworkModule {
             .readTimeout(30000, TimeUnit.MILLISECONDS)
             .connectTimeout(30000, TimeUnit.MILLISECONDS)
             .addInterceptor(loggingInterceptor)
-            .addInterceptor(JwtTokenInterceptor(context))
             .authenticator(TokenAuthenticator(context))  // Authenticator 추가
+            .addInterceptor(JwtTokenInterceptor(context))
             .build()
     }
 

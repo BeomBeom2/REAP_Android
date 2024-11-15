@@ -1,4 +1,4 @@
-package com.reap.reap_android.ui.main
+package com.reap.presentation.ui.main
 
 import android.content.Context
 import android.net.Uri
@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,17 +68,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.reap.data.getAccessToken
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.chat.ChatScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
-import com.reap.presentation.ui.main.MainViewModel
-import com.reap.presentation.ui.main.UploadStatus
 import com.reap.presentation.ui.record.RecordScreen
 import com.reap.presentation.ui.selectedDateRecord.SelectedDateRecordScreen
+import kotlinx.coroutines.delay
 
 /**
  * Created by Beom_2 on 21.September.2024
@@ -87,7 +86,6 @@ fun MainScreen() {
     val mainViewModel: MainViewModel = hiltViewModel()
     val navController = rememberNavController()
 
-    Log.d("MainScreen", "${getAccessToken(LocalContext.current)}")
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -267,17 +265,17 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     val uploadStatus by mainViewModel.uploadStatus.collectAsState()
-    var selectedTopic by remember { mutableStateOf("일상") } // 주제 기본값 설정
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) } // 선택된 파일의 URI
-    var showTopicDialog by remember { mutableStateOf(false) } // 주제 선택 모달 창 표시 여부
+    var selectedTopic by remember { mutableStateOf("일상") }
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var showTopicDialog by remember { mutableStateOf(false) } // 주제 선택 모달 창
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             if (isValidAudioFile(context, it)) {
-                selectedFileUri = it // 파일 URI 저장
-                showTopicDialog = true // 주제 선택 모달 창 표시
+                selectedFileUri = it
+                showTopicDialog = true
             } else {
                 Toast.makeText(context, "유효하지 않은 오디오 파일입니다.", Toast.LENGTH_SHORT).show()
             }
@@ -398,22 +396,34 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
             when (uploadStatus) {
                 is UploadStatus.Uploading -> CircularProgressIndicator()
                 is UploadStatus.Success -> {
+                    Log.d("MainScreen", "Upload File, ID is ${(uploadStatus as UploadStatus.Success).fileId}")
                     Toast.makeText(
                         context,
-                        "업로드 성공! 파일 ID: ${(uploadStatus as UploadStatus.Success).fileId}",
+                        "파일 업로드에 성공하였습니다",
                         Toast.LENGTH_SHORT
                     ).show()
-                    mainViewModel.resetUploadSuccess()
+
+                    LaunchedEffect(Unit) {
+                        delay(2000)
+                        onDismiss()
+                        mainViewModel.resetUploadSuccess()
+                    }
                 }
                 is UploadStatus.Error -> {
                     Toast.makeText(
                         context,
-                        "업로드 실패: ${(uploadStatus as UploadStatus.Error).message}",
+                        "업로드에 실패했습니다, 잠시후 다시 시도해주세요.",
                         Toast.LENGTH_SHORT
                     ).show()
-                    mainViewModel.resetUploadSuccess()
+                    Log.d("MainScreen", "Fail upload File, Err is ${(uploadStatus as UploadStatus.Error).message}")
+
+                    LaunchedEffect(Unit) {
+                        delay(2000)
+                        onDismiss()
+                        mainViewModel.resetUploadSuccess()
+                    }
                 }
-                else -> { mainViewModel.resetUploadSuccess()}
+                else -> {}
             }
         }
     }

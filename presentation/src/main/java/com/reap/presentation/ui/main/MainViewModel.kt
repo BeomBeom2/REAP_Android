@@ -28,9 +28,6 @@ class MainViewModel @Inject constructor(
     private val _uploadStatus = MutableStateFlow<UploadStatus>(UploadStatus.Idle)
     val uploadStatus: StateFlow<UploadStatus> = _uploadStatus.asStateFlow()
 
-    private val _onUploadSuccess = MutableStateFlow(false)
-    val onUploadSuccess = _onUploadSuccess.asStateFlow()
-
     fun uploadAudioFile(uri: Uri, topic: String) {
         viewModelScope.launch {
             _uploadStatus.value = UploadStatus.Uploading
@@ -38,7 +35,6 @@ class MainViewModel @Inject constructor(
                 val mediaPart = prepareFilePart(uri)
                 val fileId = postRecognizeUrlUseCase(topic, mediaPart)
                 _uploadStatus.value = UploadStatus.Success(fileId)
-                _onUploadSuccess.value = true
             } catch (e: Exception) {
                 _uploadStatus.value = UploadStatus.Error(e.message ?: "파일 업로드 중 에러가 발생했습니다.")
             }
@@ -84,7 +80,6 @@ class MainViewModel @Inject constructor(
     }
 
     fun resetUploadSuccess() {
-        _onUploadSuccess.value = false
         _uploadStatus.value = UploadStatus.Idle
     }
 }

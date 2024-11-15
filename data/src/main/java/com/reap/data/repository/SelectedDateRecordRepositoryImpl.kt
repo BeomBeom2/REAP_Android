@@ -13,7 +13,7 @@ class SelectedDateRecordRepositoryImpl @Inject constructor(
         return selectedDateRecordApi.getSelectedDateRecord(date)
     }
 
-    override suspend fun getSelectedDateRecordDetailUseCase(recordedDate : String, fileName : String) : List<RecordingDetail> {
-        return selectedDateRecordApi.getSelectedDateRecordDetail(recordedDate, fileName)
+    override suspend fun getSelectedDateRecordDetailUseCase(recordedDate : String, recordId : String) : List<RecordingDetail> {
+        return selectedDateRecordApi.getSelectedDateRecordDetail(recordedDate, recordId)
     }
 }

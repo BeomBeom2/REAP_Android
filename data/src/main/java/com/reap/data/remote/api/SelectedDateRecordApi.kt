@@ -15,6 +15,6 @@ interface SelectedDateRecordApi {
     @GET("/api/auth/script/{date}")
     suspend fun getSelectedDateRecordDetail(
         @Path("date") date: String,
-        @Query("recordName") recordName: String,
+        @Query("recordId") recordId: String,
     ): List<RecordingDetail>
 }

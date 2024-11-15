@@ -48,10 +48,6 @@ fun UserLabel(userNickName: String, userId: String) {
             modifier = Modifier
                 .size(48.dp)
                 .fillMaxHeight()
-                //.background(
-                //    color = colorResource(id = R.color.cement_2),
-                //    shape = RoundedCornerShape(26.dp)
-                //)
                 .padding(4.dp),
         )
 
@@ -70,7 +66,7 @@ fun UserLabel(userNickName: String, userId: String) {
             )
 
             Text(
-                text = userId, //"whwjdqja20@naver.com",
+                text = userId,
                 fontSize = 14.sp,
                 color = colorResource(id = R.color.cement_4),
                 fontWeight = FontWeight.Medium,
