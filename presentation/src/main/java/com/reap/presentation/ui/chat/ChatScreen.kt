@@ -26,8 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -339,10 +339,9 @@ fun UserInput(
                 focusManager.clearFocus()
             }
         }) {
-            Icon(Icons.Default.Send, contentDescription = "Send")
+            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
         }
     }
-
     // 음성 인식 중일 때 모달 창 표시
     if (isListening) {
         Dialog(onDismissRequest = { isListening = false }) {

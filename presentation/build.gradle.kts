@@ -37,6 +37,15 @@ android {
         buildConfig = true
 
     }
+    packaging  {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
+    }
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
@@ -86,6 +95,13 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.kakao.user)
     implementation(libs.lottie.compose)
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.mockk.android)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.android)

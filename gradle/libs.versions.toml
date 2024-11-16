@@ -36,6 +36,10 @@ okhttpUrlconnection = "5.0.0-alpha.14"
 accompanistPermissions = "0.36.0"
 kakao = "2.20.1"
 lottieCompose = "6.6.0"
+mockk = "1.13.13"
+uiTestJunit4 = "1.7.2"
+uiTestManifest = "1.7.2"
+mockkAndroid = "1.13.13"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -73,6 +77,10 @@ retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = 
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistPermissions" }
 kakao-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kakao" }
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottieCompose" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "uiTestJunit4" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "uiTestManifest" }
+mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockkAndroid" }
 
 
 [plugins]

@@ -128,7 +128,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
 }
 
 @Composable
-private fun MainScreenNavigationConfigurations(
+fun MainScreenNavigationConfigurations(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
