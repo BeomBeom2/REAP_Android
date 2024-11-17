@@ -34,13 +34,14 @@ fun HomeScreen(
     LaunchedEffect(mainViewModel) {
         homeViewModel.getHomeRecentlyRecodingData()
 
-        mainViewModel.uploadStatus.collect {res ->
-            when(res) {
+        mainViewModel.uploadStatus.collect { res ->
+            when (res) {
                 is UploadStatus.Success -> {
                     Log.d("HomeScreen", "Upload success event received")
                     homeViewModel.getHomeRecentlyRecodingData()
                 }
-                else -> { }
+
+                else -> {}
             }
         }
     }
@@ -58,31 +59,52 @@ internal fun Home(
     val scrollState = rememberScrollState()
     val recordings by viewModel.recentlyRecordings.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    Surface(color = com.reap.presentation.common.theme.BackgroundGray) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = sidePadding)
-                .verticalScroll(scrollState)
-        ) {
-            val nickname = getNickname(LocalContext.current) ?: "Reap"
-            UserLabel(nickname, "")
+    val screenState by viewModel.screenState.collectAsState()
 
-            CalendarCustom(recordings, navController)
+    when (screenState) {
+        HomeScreenState.RECORD_RECENT, HomeScreenState.RECORD_ERROR -> {
+            Surface(color = com.reap.presentation.common.theme.BackgroundGray) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = sidePadding)
+                        .verticalScroll(scrollState)
+                ) {
+                    val nickname = getNickname(LocalContext.current) ?: "Reap"
+                    UserLabel(nickname, "")
 
-            RecordItemList(
-                recordings = recordings,
-                { scriptId, newName, newTopic ->
-                    coroutineScope.launch {
-                        viewModel.updateTopicAndFileName(scriptId, newName, newTopic)
-                    }
-                },
-                { scriptId, newName, newTopic ->
-                    coroutineScope.launch {
-                        viewModel.deleteRecord(scriptId, newName, newTopic)
-                    }
+                    CalendarCustom(recordings, navController)
+
+                    RecordItemList(
+                        recordings = recordings,
+                        onMenuClick = { scriptId, newName, newTopic ->
+                            coroutineScope.launch {
+                                viewModel.updateTopicAndFileName(scriptId, newName, newTopic)
+                            }
+                        },
+                        onDeleteClick = { scriptId, newName, newTopic ->
+                            coroutineScope.launch {
+                                viewModel.deleteRecord(scriptId, newName, newTopic)
+                            }
+                        },
+                        onItemClick = { date, recordingId ->
+                            viewModel.fetchRecordingDetails(date, recordingId)
+                        },
+                        navController = navController,
+                    )
+                }
+            }
+        }
+
+        HomeScreenState.RECORD_DETAIL -> {
+            RecentRecDetails(details = viewModel.selectedRecordingDetails.value!!,
+                selectedDate = viewModel.selectDate.value!!,
+                navController = navController,
+                onBackClick = {
+                    viewModel.resetToList()
                 }
             )
         }
     }
+
 }

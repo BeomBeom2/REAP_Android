@@ -145,7 +145,7 @@ fun CalendarCustom(recordings: List<RecordingMetaData>, navController: NavContro
                         //    selections = selections + clicked
                         //}
 
-                        navController.navigate(NavRoutes.SelectedDateRecord.withDate(clicked.format(dateFormatter)))
+                        navController.navigate(NavRoutes.DateRecList.withDate(clicked.format(dateFormatter)))
                     }
                 },
             )

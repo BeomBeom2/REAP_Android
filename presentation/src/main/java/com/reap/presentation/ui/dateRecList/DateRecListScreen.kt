@@ -1,4 +1,4 @@
-package com.reap.presentation.ui.selectedDateRecord
+package com.reap.presentation.ui.dateRecList
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -45,11 +45,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun SelectedDateRecordScreen(
+fun DateRecListScreen(
     navController: NavController,
     selectedDate: String
 ) {
-    val viewModel: SelectedDateRecordViewModel = hiltViewModel()
+    val viewModel: DateRecListViewModel = hiltViewModel()
     val recordingList by viewModel.selectedDateRecordData.collectAsState()
     val screenState by viewModel.screenState.collectAsState()
     val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
@@ -61,12 +61,11 @@ fun SelectedDateRecordScreen(
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
-            //Toast.makeText(LocalContext.current, it, Toast.LENGTH_SHORT).show()
             viewModel.resetToList()
         }
     }
 
-    SelectedDateRecord(
+    DateRecList(
         selectedDate = selectedDate,
         recordingList = recordingList,
         screenState = screenState,
@@ -95,7 +94,7 @@ fun SelectedDateRecordScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SelectedDateRecord(
+internal fun DateRecList(
     selectedDate: String,
     recordingList: List<RecordingMetaData>,
     screenState: ScreenState,

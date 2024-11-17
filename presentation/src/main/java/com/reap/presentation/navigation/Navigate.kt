@@ -2,11 +2,6 @@ package com.reap.presentation.navigation
 
 sealed class Navigate(val route: String) {
 
-    sealed class BottomSheet {
-
-        object Ingredients : Navigate("ingredients_details")
-    }
-
     sealed class Screen {
 
         object OnBoardingWelcome : Navigate("onboarding_welcome_screen")
@@ -16,5 +11,7 @@ sealed class Navigate(val route: String) {
         object Mike : Navigate("mike")
 
         object Search : Navigate("search")
+
+        object SelectedDateRecord : Navigate("selectedDateRecord/{date}/{recordId}")
     }
 }

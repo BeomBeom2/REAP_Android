@@ -72,10 +72,10 @@ import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.chat.ChatScreen
+import com.reap.presentation.ui.dateRecList.DateRecListScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
 import com.reap.presentation.ui.record.RecordScreen
-import com.reap.presentation.ui.selectedDateRecord.SelectedDateRecordScreen
 import kotlinx.coroutines.delay
 
 /**
@@ -164,13 +164,13 @@ fun NavGraphBuilder.selectedDateRecordScreen(
     bottomBarState: MutableState<Boolean>,
 ) {
     composable(
-        route = NavRoutes.SelectedDateRecord.route,
+        route = NavRoutes.DateRecList.route,
         arguments = listOf(navArgument("selectedDate") { type = NavType.StringType })
     ) { backStackEntry ->
         val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
         bottomBarState.value = true
 
-        SelectedDateRecordScreen(navController = navController, selectedDate = selectedDate)
+        DateRecListScreen(navController = navController, selectedDate = selectedDate)
     }
 }
 

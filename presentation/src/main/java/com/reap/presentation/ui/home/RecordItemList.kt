@@ -37,12 +37,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.reap.domain.model.RecordingMetaData
 
 @Composable
 fun RecordItemList(recordings: List<RecordingMetaData>,
                    onMenuClick: (scriptId: String, newName: String, newTopic: String) -> Unit,
-                   onDeleteClick: (date: String, fileName: String, recordId: String) -> Unit){
+                   onDeleteClick: (date: String, fileName: String, recordId: String) -> Unit,
+                   onItemClick: (String, String) -> Unit,
+                   navController: NavController
+){
     Text(
         modifier = Modifier
             .padding(bottom = 10.dp, top = 30.dp),
@@ -59,7 +63,7 @@ fun RecordItemList(recordings: List<RecordingMetaData>,
                 recording = recording,
                 onMenuClick = onMenuClick,
                 onDeleteClick = onDeleteClick,
-                onItemClick = { _, _ -> }
+                onItemClick = onItemClick
             )
         }
     }

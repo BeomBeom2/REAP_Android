@@ -1,4 +1,4 @@
-package com.reap.presentation.ui.selectedDateRecord
+package com.reap.presentation.ui.dateRecList
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SelectedDateRecordViewModel @Inject constructor(
+class DateRecListViewModel @Inject constructor(
     private val getSelectedDateRecordUseCase: GetSelectedDateRecordUseCase,
     private val getSelectedDateRecordDetailUseCase: GetSelectedDateRecordDetailUseCase,
     private val putUpdateTopicAnfFileNameUseCase : PutUpdateTopicAndFileNameUseCase,
