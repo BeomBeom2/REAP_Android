@@ -2,6 +2,7 @@ package com.reap.presentation.ui.home
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -26,7 +26,6 @@ import com.reap.domain.model.RecordingDetail
 import com.reap.presentation.ui.dateRecList.RecordingDetails
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,18 +41,23 @@ fun RecentRecDetails(details: List<RecordingDetail>, selectedDate: String, navCo
                 ) {
                     Text(
                         text = formattedDate,
-                        textAlign = TextAlign.Center,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "뒤로가기"
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "뒤로가기",
+                        )
+                    }
                 }
             },
             modifier = Modifier
@@ -64,4 +68,5 @@ fun RecentRecDetails(details: List<RecordingDetail>, selectedDate: String, navCo
 
         RecordingDetails(details)
     }
+
 }

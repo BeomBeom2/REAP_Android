@@ -60,6 +60,8 @@ internal fun Home(
     val recordings by viewModel.recentlyRecordings.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val screenState by viewModel.screenState.collectAsState()
+    val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
+    val selectDate by viewModel.selectDate.collectAsState()
 
     when (screenState) {
         HomeScreenState.RECORD_RECENT, HomeScreenState.RECORD_ERROR -> {
@@ -97,8 +99,9 @@ internal fun Home(
         }
 
         HomeScreenState.RECORD_DETAIL -> {
-            RecentRecDetails(details = viewModel.selectedRecordingDetails.value!!,
-                selectedDate = viewModel.selectDate.value!!,
+            RecentRecDetails(
+                details = selectedRecordingDetails!!,
+                selectedDate = selectDate!!,
                 navController = navController,
                 onBackClick = {
                     viewModel.resetToList()
@@ -106,5 +109,4 @@ internal fun Home(
             )
         }
     }
-
 }
