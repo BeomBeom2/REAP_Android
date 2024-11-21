@@ -435,11 +435,9 @@ fun isValidAudioFile(context: Context, uri: Uri): Boolean {
     val contentResolver = context.contentResolver
     val mimeType = contentResolver.getType(uri)
 
-    // MIME 타입 검사를 보다 세부적으로 조정
     if (mimeType == null || !(mimeType.startsWith("audio/") || mimeType == "audio/mp4" || mimeType == "audio/x-m4a")) {
         return false
     }
-
 
     // 파일 크기 검사 (예: 최대 10MB)
     val fileSize = contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0

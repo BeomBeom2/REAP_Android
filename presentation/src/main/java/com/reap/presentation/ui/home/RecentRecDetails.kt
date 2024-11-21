@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.reap.domain.model.RecordingDetail
 import com.reap.presentation.ui.dateRecList.RecordingDetails
 import java.time.LocalDate
@@ -29,7 +28,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecentRecDetails(details: List<RecordingDetail>, selectedDate: String, navController: NavController,onBackClick: () -> Unit) {
+fun RecentRecDetails(details: List<RecordingDetail>, selectedDate: String, onBackClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {

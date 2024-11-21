@@ -1,4 +1,4 @@
-package com.reap.domain.usecase.SelectedDateRecord
+package com.reap.domain.usecase.selectedDateRecord
 
 import com.reap.domain.model.RecordingMetaData
 import com.reap.domain.repository.SelectedDateRecordRepository

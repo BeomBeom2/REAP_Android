@@ -1,6 +1,8 @@
 package com.reap.presentation.ui.dateRecList
 
-import android.widget.Toast
+import android.app.Activity
+import android.app.ActivityOptions
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +43,7 @@ import androidx.navigation.NavController
 import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.presentation.ui.home.RecordingItem
+import com.reap.presentation.ui.home.toIntent
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -52,10 +55,28 @@ fun DateRecListScreen(
 ) {
     val viewModel: DateRecListViewModel = hiltViewModel()
     val recordingList by viewModel.selectedDateRecordData.collectAsState()
-    val screenState by viewModel.screenState.collectAsState()
     val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val isFetchData by viewModel.isFetchData.collectAsState()
+    LaunchedEffect(isFetchData) {
+        if (isFetchData) {
+            viewModel.resetToList()
+
+            val intent = Intent(context, DateRecDetailActivity::class.java).apply {
+                putParcelableArrayListExtra(
+                    "DETAILS",
+                    ArrayList(viewModel.selectedRecordingDetails.value?.map { it.toIntent() }
+                        ?: emptyList())
+                )
+                putExtra("SELECTED_DATE", viewModel.selectDate.value)
+            }
+            (context as Activity).startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(context).toBundle())
+        }
+    }
+
     LaunchedEffect(selectedDate) {
         viewModel.getSelectedDateRecordData(selectedDate)
     }
@@ -69,17 +90,11 @@ fun DateRecListScreen(
     DateRecList(
         selectedDate = selectedDate,
         recordingList = recordingList,
-        screenState = screenState,
         selectedRecordingDetails = selectedRecordingDetails,
         onItemClick = { date, recordingId ->
             viewModel.fetchRecordingDetails(date, recordingId)
         },
-        onBackPressed = {
-            when (screenState) {
-                ScreenState.RECORD_LIST -> navController.popBackStack()
-                else -> viewModel.resetToList()
-            }
-        },
+        onBackPressed = { navController.popBackStack() },
         onMenuClick = { scriptId, newName, newTopic ->
             coroutineScope.launch {
                 viewModel.updateTopicAndFileName(scriptId, newName, newTopic)
@@ -98,18 +113,18 @@ fun DateRecListScreen(
 internal fun DateRecList(
     selectedDate: String,
     recordingList: List<RecordingMetaData>,
-    screenState: ScreenState,
     selectedRecordingDetails: List<RecordingDetail>?,
     onItemClick: (String, String) -> Unit,
     onBackPressed: () -> Unit,
-    onMenuClick : (String, String, String) -> Unit,
-    onDeleteClick : (String, String, String) -> Unit
+    onMenuClick: (String, String, String) -> Unit,
+    onDeleteClick: (String, String, String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {
-                val formattedDate = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"))
+                val formattedDate =
+                    LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일"))
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.CenterStart
@@ -143,21 +158,9 @@ internal fun DateRecList(
         )
 
 
-        when (screenState) {
-            ScreenState.RECORD_LIST -> {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    recordingList.forEach { recording ->
-                        RecordingItem(recording, onMenuClick, onDeleteClick, onItemClick)
-                    }
-                }
-            }
-            ScreenState.RECORD_SCRIPT -> {
-                selectedRecordingDetails?.let { details ->
-                    RecordingDetails(details)
-                }
-            }
-            ScreenState.RECORD_ERROR -> {
-                Toast.makeText(LocalContext.current, "음성 변환 텍스트를 불러오는데 오류가 발생하였습니다.", Toast.LENGTH_SHORT).show()
+        Column(modifier = Modifier.padding(16.dp)) {
+            recordingList.forEach { recording ->
+                RecordingItem(recording, onMenuClick, onDeleteClick, onItemClick)
             }
         }
     }

@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
-import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordDetailUseCase
 import com.reap.domain.usecase.home.DeleteRecordUseCase
 import com.reap.domain.usecase.home.GetHomeRecentlyRecodingDataUseCase
 import com.reap.domain.usecase.home.PutUpdateTopicAndFileNameUseCase
+import com.reap.domain.usecase.selectedDateRecord.GetSelectedDateRecordDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,13 +25,10 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     private val _recentlyRecordings = MutableStateFlow<List<RecordingMetaData>>(emptyList())
     val recentlyRecordings: StateFlow<List<RecordingMetaData>> = _recentlyRecordings.asStateFlow()
-    private val _isLoading = MutableStateFlow(false)
-
+    private val _isFetchData = MutableStateFlow(false)
+    val isFetchData: StateFlow<Boolean> = _isFetchData
     private val _selectedRecordingDetails = MutableStateFlow<List<RecordingDetail>?>(null)
     val selectedRecordingDetails: StateFlow<List<RecordingDetail>?> = _selectedRecordingDetails
-
-    private val _screenState = MutableStateFlow(HomeScreenState.RECORD_RECENT)
-    val screenState: StateFlow<HomeScreenState> = _screenState
 
     private val _selectDate = MutableStateFlow<String?>(null)
     val selectDate : MutableStateFlow<String?> = _selectDate
@@ -84,28 +81,19 @@ class HomeViewModel @Inject constructor(
 
     fun fetchRecordingDetails(selectedDate: String, recordingId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
             try {
                 val details = getSelectedDateRecordDetailUseCase(selectedDate, recordingId)
                 _selectedRecordingDetails.value = details
                 _selectDate.value = selectedDate
-                _screenState.value = HomeScreenState.RECORD_DETAIL
+                _isFetchData.value = true
             } catch (e: Exception) {
                 Log.e("SelectedDateRecordViewModel", "From fetchRecordingDetails, Err is ${e.message}")
-                _screenState.value = HomeScreenState.RECORD_ERROR
-            } finally {
-                _isLoading.value = false
             }
         }
     }
+
     fun resetToList() {
-        _screenState.value = HomeScreenState.RECORD_RECENT
-        _selectedRecordingDetails.value = null
+        _isFetchData.value = false
     }
 }
 
-enum class HomeScreenState {
-    RECORD_RECENT,
-    RECORD_DETAIL,
-    RECORD_ERROR
-}

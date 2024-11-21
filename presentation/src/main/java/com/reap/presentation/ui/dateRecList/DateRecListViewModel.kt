@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
-import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordDetailUseCase
-import com.reap.domain.usecase.SelectedDateRecord.GetSelectedDateRecordUseCase
 import com.reap.domain.usecase.home.DeleteRecordUseCase
 import com.reap.domain.usecase.home.PutUpdateTopicAndFileNameUseCase
+import com.reap.domain.usecase.selectedDateRecord.GetSelectedDateRecordDetailUseCase
+import com.reap.domain.usecase.selectedDateRecord.GetSelectedDateRecordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,18 +23,16 @@ class DateRecListViewModel @Inject constructor(
     private val putUpdateTopicAnfFileNameUseCase : PutUpdateTopicAndFileNameUseCase,
     private val deleteRecordUseCase : DeleteRecordUseCase
 ) : ViewModel() {
-
-    // StateFlow를 리스트 형식으로 변경
     private val _selectedDateRecordData = MutableStateFlow<List<RecordingMetaData>>(emptyList())
     val selectedDateRecordData: StateFlow<List<RecordingMetaData>> = _selectedDateRecordData.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
 
     private val _selectedRecordingDetails = MutableStateFlow<List<RecordingDetail>?>(null)
     val selectedRecordingDetails: StateFlow<List<RecordingDetail>?> = _selectedRecordingDetails
 
-    private val _screenState = MutableStateFlow(ScreenState.RECORD_LIST)
-    val screenState: StateFlow<ScreenState> = _screenState
+    private val _isFetchData = MutableStateFlow(false)
+    val isFetchData: StateFlow<Boolean> = _isFetchData
+    private val _selectDate = MutableStateFlow<String?>(null)
+    val selectDate : MutableStateFlow<String?> = _selectDate
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -85,31 +83,21 @@ class DateRecListViewModel @Inject constructor(
         }
     }
 
+
     fun fetchRecordingDetails(selectedDate: String, recordingId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
             try {
                 val details = getSelectedDateRecordDetailUseCase(selectedDate, recordingId)
                 _selectedRecordingDetails.value = details
-                _screenState.value = ScreenState.RECORD_SCRIPT
+                _selectDate.value = selectedDate
+                _isFetchData.value = true
             } catch (e: Exception) {
                 Log.e("SelectedDateRecordViewModel", "From fetchRecordingDetails, Err is ${e.message}")
-                _screenState.value = ScreenState.RECORD_ERROR
-                _errorMessage.value = "불러오기 실패"
-            } finally {
-                _isLoading.value = false
             }
         }
     }
 
     fun resetToList() {
-        _screenState.value = ScreenState.RECORD_LIST
-        _selectedRecordingDetails.value = null
+        _isFetchData.value = false
     }
-}
-
-enum class ScreenState {
-    RECORD_LIST,
-    RECORD_SCRIPT,
-    RECORD_ERROR
 }
