@@ -1,8 +1,6 @@
 package com.reap.presentation.ui.dateRecList
 
-import android.app.Activity
-import android.app.ActivityOptions
-import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,17 +31,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.google.gson.Gson
 import com.reap.domain.model.RecordingDetail
 import com.reap.domain.model.RecordingMetaData
 import com.reap.presentation.ui.home.RecordingItem
-import com.reap.presentation.ui.home.toIntent
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -58,22 +55,17 @@ fun DateRecListScreen(
     val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val isFetchData by viewModel.isFetchData.collectAsState()
     LaunchedEffect(isFetchData) {
         if (isFetchData) {
             viewModel.resetToList()
+            viewModel.resetToList()
 
-            val intent = Intent(context, DateRecDetailActivity::class.java).apply {
-                putParcelableArrayListExtra(
-                    "DETAILS",
-                    ArrayList(viewModel.selectedRecordingDetails.value?.map { it.toIntent() }
-                        ?: emptyList())
-                )
-                putExtra("SELECTED_DATE", viewModel.selectDate.value)
-            }
-            (context as Activity).startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(context).toBundle())
+            val selectedDate = viewModel.selectDate.value ?: ""
+            val detailsJson = Uri.encode(Gson().toJson(viewModel.selectedRecordingDetails.value ?: emptyList<List<RecordingDetail>>()))
+
+            navController.navigate("dateRecScript/$selectedDate/$detailsJson")
         }
     }
 
@@ -90,7 +82,6 @@ fun DateRecListScreen(
     DateRecList(
         selectedDate = selectedDate,
         recordingList = recordingList,
-        selectedRecordingDetails = selectedRecordingDetails,
         onItemClick = { date, recordingId ->
             viewModel.fetchRecordingDetails(date, recordingId)
         },
@@ -113,7 +104,6 @@ fun DateRecListScreen(
 internal fun DateRecList(
     selectedDate: String,
     recordingList: List<RecordingMetaData>,
-    selectedRecordingDetails: List<RecordingDetail>?,
     onItemClick: (String, String) -> Unit,
     onBackPressed: () -> Unit,
     onMenuClick: (String, String, String) -> Unit,

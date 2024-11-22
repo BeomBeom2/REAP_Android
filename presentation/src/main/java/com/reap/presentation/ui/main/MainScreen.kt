@@ -68,11 +68,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.reap.domain.model.RecordingDetail
 import com.reap.presentation.common.theme.SpeechRed
 import com.reap.presentation.navigation.BottomBarItem
 import com.reap.presentation.navigation.NavRoutes
 import com.reap.presentation.ui.chat.ChatScreen
 import com.reap.presentation.ui.dateRecList.DateRecListScreen
+import com.reap.presentation.ui.dateRecList.RecentRecScriptScreen
 import com.reap.presentation.ui.home.HomeScreen
 import com.reap.presentation.ui.home.calendar.clickable
 import com.reap.presentation.ui.record.RecordScreen
@@ -141,7 +145,8 @@ fun MainScreenNavigationConfigurations(
     ) {
         homeScreen(navController, bottomBarState, mainViewModel)
         recordScreen(navController, bottomBarState)
-        selectedDateRecordScreen(navController, bottomBarState)
+        dateRecListScreen(navController, bottomBarState)
+        dateRecScriptScreen(navController, bottomBarState)
         chatScreen(navController, bottomBarState)
     }
 }
@@ -159,7 +164,7 @@ fun NavGraphBuilder.recordScreen(
     }
 }
 
-fun NavGraphBuilder.selectedDateRecordScreen(
+fun NavGraphBuilder.dateRecListScreen(
     navController: NavController,
     bottomBarState: MutableState<Boolean>,
 ) {
@@ -173,6 +178,32 @@ fun NavGraphBuilder.selectedDateRecordScreen(
         DateRecListScreen(navController = navController, selectedDate = selectedDate)
     }
 }
+
+fun NavGraphBuilder.dateRecScriptScreen(
+    navController: NavController,
+    bottomBarState: MutableState<Boolean>
+) {
+    composable(
+        route = NavRoutes.DateRecScript.route,
+        arguments = listOf(
+            navArgument("selectedDate") { type = NavType.StringType },
+            navArgument("detailsJson") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        val selectedDate = backStackEntry.arguments?.getString("selectedDate") ?: ""
+        val detailsJson = backStackEntry.arguments?.getString("detailsJson") ?: "[]"
+        val details: List<RecordingDetail> = Gson().fromJson(detailsJson, object : TypeToken<List<RecordingDetail>>() {}.type)
+
+        bottomBarState.value = false
+
+        RecentRecScriptScreen(
+            details = details,
+            selectedDate = selectedDate,
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+}
+
 
 fun NavGraphBuilder.homeScreen(
     navController: NavController,

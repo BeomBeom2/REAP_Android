@@ -5,7 +5,7 @@ sealed class NavRoutes(val route: String) {
     object Home : NavRoutes("Home")
     object Record : NavRoutes("Record")
     object Chat : NavRoutes("Chat")
-
+    object DateRecScript : NavRoutes("dateRecScript/{selectedDate}/{detailsJson}")
     object DateRecList : NavRoutes("DateRecList/{selectedDate}") {
         fun withDate(selectedDate: String): String {
             return "DateRecList/$selectedDate"
