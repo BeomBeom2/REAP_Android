@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.reap.presentation.ui.main.BottomNavigationBar
 import com.reap.presentation.ui.main.MainScreen
-import com.reap.presentation.ui.main.MainScreenNavigationConfigurations
+import com.reap.presentation.ui.main.ScreenNavigationConfigurations
 import com.reap.presentation.ui.main.MainViewModel
 import com.reap.presentation.ui.main.RecordBottomSheet
 import com.reap.presentation.ui.main.UploadStatus
@@ -71,7 +71,7 @@ class MainScreenTest {
     fun `navigation routes should be correctly configured`() {
         composeTestRule.setContent {
             val navController = rememberNavController()
-            MainScreenNavigationConfigurations(
+            ScreenNavigationConfigurations(
                 navController = navController,
                 paddingValues = PaddingValues(),
                 bottomBarState = mutableStateOf(true),

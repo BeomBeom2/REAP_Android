@@ -35,8 +35,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -106,13 +104,11 @@ fun MainScreen() {
 
 @Composable
 fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, mainViewModel: MainViewModel) {
-    val snackBarHostState = remember { SnackbarHostState() }
     val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
     val showBottomSheet = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier,
-        snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
             if (bottomBarState.value) {
                 BottomNavigationBar(
@@ -123,7 +119,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
             }
         }
     ) { paddingValues ->
-        MainScreenNavigationConfigurations(navController, paddingValues, bottomBarState, mainViewModel)
+        ScreenNavigationConfigurations(navController, paddingValues, bottomBarState, mainViewModel)
     }
 
     if (showBottomSheet.value) {
@@ -132,7 +128,7 @@ fun SettingUpBottomNavigationBarAndCollapsing(navController: NavHostController, 
 }
 
 @Composable
-fun MainScreenNavigationConfigurations(
+fun ScreenNavigationConfigurations(
     navController: NavHostController,
     paddingValues: PaddingValues,
     bottomBarState: MutableState<Boolean>,
@@ -315,48 +311,13 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
 
     // 주제 선택 모달 창
     if (showTopicDialog) {
-        AlertDialog(
+        ShowSelectTopicModal(
             onDismissRequest = { showTopicDialog = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    selectedFileUri?.let { uri ->
-                        mainViewModel.uploadAudioFile(uri, selectedTopic) // 선택된 주제와 파일 URI를 업로드
-                        showTopicDialog = false
-                    }
-                }) {
-                    Text("업로드")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTopicDialog = false }) {
-                    Text("취소")
-                }
-            },
-            title = { Text("주제 선택") },
-            text = {
-                Column {
-                    Text("파일을 업로드할 주제를 선택하세요:")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    val topics = listOf("일상", "강의", "대화", "회의")
-                    topics.forEach { topic ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = (selectedTopic == topic),
-                                    onClick = { selectedTopic = topic }
-                                )
-                                .padding(4.dp)
-                        ) {
-                            RadioButton(
-                                selected = (selectedTopic == topic),
-                                onClick = { selectedTopic = topic }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = topic)
-                        }
-                    }
+            selectedTopic = selectedTopic,
+            onTopicSelected = { selectedTopic = it },
+            onConfirm = { topic ->
+                selectedFileUri?.let { uri ->
+                    mainViewModel.uploadAudioFile(uri, topic)
                 }
             }
         )
@@ -460,6 +421,57 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
     }
 }
 
+@Composable
+private fun ShowSelectTopicModal(
+    onDismissRequest: () -> Unit,
+    selectedTopic: String,
+    onTopicSelected: (String) -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(selectedTopic)
+                onDismissRequest()
+            }) {
+                Text("업로드")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismissRequest() }) {
+                Text("취소")
+            }
+        },
+        title = { Text("주제 선택") },
+        text = {
+            Column {
+                Text("파일을 업로드할 주제를 선택하세요:")
+                Spacer(modifier = Modifier.height(8.dp))
+                val topics = listOf("일상", "강의", "대화", "회의")
+                topics.forEach { topic ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = (selectedTopic == topic),
+                                onClick = { onTopicSelected(topic) }
+                            )
+                            .padding(4.dp)
+                    ) {
+                        RadioButton(
+                            selected = (selectedTopic == topic),
+                            onClick = { onTopicSelected(topic) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = topic)
+                    }
+                }
+            }
+        }
+    )
+}
 
 
 fun isValidAudioFile(context: Context, uri: Uri): Boolean {
