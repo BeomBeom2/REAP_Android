@@ -52,7 +52,6 @@ fun DateRecListScreen(
 ) {
     val viewModel: DateRecListViewModel = hiltViewModel()
     val recordingList by viewModel.selectedDateRecordData.collectAsState()
-    val selectedRecordingDetails by viewModel.selectedRecordingDetails.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -62,7 +61,6 @@ fun DateRecListScreen(
             viewModel.resetToList()
             viewModel.resetToList()
 
-            val selectedDate = viewModel.selectDate.value ?: ""
             val detailsJson = Uri.encode(Gson().toJson(viewModel.selectedRecordingDetails.value ?: emptyList<List<RecordingDetail>>()))
 
             navController.navigate("dateRecScript/$selectedDate/$detailsJson")
@@ -70,7 +68,7 @@ fun DateRecListScreen(
     }
 
     LaunchedEffect(selectedDate) {
-        viewModel.getSelectedDateRecordData(selectedDate)
+        viewModel.getSelectedDateRecord(selectedDate)
     }
 
     LaunchedEffect(errorMessage) {

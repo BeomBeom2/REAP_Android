@@ -32,14 +32,13 @@ class DateRecListViewModel @Inject constructor(
     private val _isFetchData = MutableStateFlow(false)
     val isFetchData: StateFlow<Boolean> = _isFetchData
     private val _selectDate = MutableStateFlow<String?>(null)
-    val selectDate : MutableStateFlow<String?> = _selectDate
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
     private val _date = MutableStateFlow<String?>(null)
 
-    fun getSelectedDateRecordData(date : String) {
+    fun getSelectedDateRecord(date : String) {
         viewModelScope.launch {
             try {
                 _date.value = date
@@ -57,17 +56,17 @@ class DateRecListViewModel @Inject constructor(
                 _selectedDateRecordData.value = recordingData
 
             } catch (e: Exception) {
-                Log.e("SelectedDateRecordViewModel", "From getSelectedDateRecordData, Err is ${e.message}")
+                Log.e("DateRecListViewModel", "From getSelectedDateRecordData, Err is ${e.message}")
             }
         }
     }
     suspend fun updateTopicAndFileName(scriptId: String, newName: String, newTopic: String): Pair<String, String> {
         return try {
             val response = putUpdateTopicAnfFileNameUseCase(scriptId, newName, newTopic)
-            _date.value?.let { getSelectedDateRecordData(it) }
+            _date.value?.let { getSelectedDateRecord(it) }
             Pair(response.modifiedTopic, response.modifiedRecordName)
         } catch (e: Exception) {
-            Log.e("SelectedDateRecordViewModel", "From updateTopicAndFileName, Err is ${e.message}")
+            Log.e("DateRecListViewModel", "From updateTopicAndFileName, Err is ${e.message}")
             Pair("", "")
         }
     }
@@ -76,9 +75,9 @@ class DateRecListViewModel @Inject constructor(
         viewModelScope.launch{
             try{
                 deleteRecordUseCase(date, fileName, recordId)
-                _date.value?.let { getSelectedDateRecordData(it) }
+                _date.value?.let { getSelectedDateRecord(it) }
             } catch(e : Exception) {
-                Log.e("SelectedDateRecordViewModel", "From deleteRecord, Err is ${e.message}")
+                Log.e("DateRecListViewModel", "From deleteRecord, Err is ${e.message}")
             }
         }
     }
@@ -92,7 +91,7 @@ class DateRecListViewModel @Inject constructor(
                 _selectDate.value = selectedDate
                 _isFetchData.value = true
             } catch (e: Exception) {
-                Log.e("SelectedDateRecordViewModel", "From fetchRecordingDetails, Err is ${e.message}")
+                Log.e("DateRecListViewModel", "From fetchRecordingDetails, Err is ${e.message}")
             }
         }
     }

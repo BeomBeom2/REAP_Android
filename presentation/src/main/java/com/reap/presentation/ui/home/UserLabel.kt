@@ -42,7 +42,7 @@ fun UserLabel(userNickName: String, userId: String) {
         Spacer(modifier = Modifier.width(12.dp))
 
         Image(
-            painter = painterResource(id = R.drawable.ic_default_user),
+            painter = painterResource(id = R.drawable.ic_simple_logo),
             contentDescription = "Default User Icon",
             contentScale = ContentScale.Crop,
             modifier = Modifier
