@@ -2,9 +2,9 @@ package com.reap.presentation.ui.main
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -147,15 +147,9 @@ fun ScreenNavigationConfigurations(
     }
 }
 
-fun NavGraphBuilder.recordScreen(
-    navController: NavController,
-    bottomBarState: MutableState<Boolean>
-) {
-    composable(
-        route = NavRoutes.Record.route
-    ) {
+fun NavGraphBuilder.recordScreen(navController: NavController, bottomBarState: MutableState<Boolean>) {
+    composable(route = NavRoutes.Record.route) {
         bottomBarState.value = false
-
         RecordScreen(navController, LocalContext.current)
     }
 }
@@ -200,30 +194,20 @@ fun NavGraphBuilder.dateRecScriptScreen(
     }
 }
 
-
 fun NavGraphBuilder.homeScreen(
     navController: NavController,
     bottomBarState: MutableState<Boolean>,
     mainViewModel: MainViewModel
 ) {
-    composable(
-        route = NavRoutes.Home.route
-    ) {
+    composable(route = NavRoutes.Home.route) {
         bottomBarState.value = true
-
         HomeScreen(navController, mainViewModel)
     }
 }
 
-fun NavGraphBuilder.chatScreen(
-    navController: NavController,
-    bottomBarState: MutableState<Boolean>
-) {
-    composable(
-        route = NavRoutes.Chat.route
-    ) {
+fun NavGraphBuilder.chatScreen(navController: NavController, bottomBarState: MutableState<Boolean>) {
+    composable(route = NavRoutes.Chat.route) {
         bottomBarState.value = false
-
         ChatScreen(navController)
     }
 }
@@ -242,10 +226,7 @@ fun BottomNavigationBar(
     NavigationBar(
         modifier
             .graphicsLayer {
-                shape = RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp
-                )
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
                 clip = true
             },
         containerColor = colorResource(id = com.reap.presentation.R.color.cement_2),
@@ -340,84 +321,74 @@ fun RecordBottomSheet(navController: NavHostController, onDismiss: () -> Unit, m
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 18.dp)
             )
+            BottomSheetContent(navController, launcher, onDismiss)
+            UploadStatusContent(uploadStatus, context, onDismiss, mainViewModel)
+        }
+    }
+}
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        painter = painterResource(id = com.reap.presentation.R.drawable.ic_mike),
-                        contentDescription = "녹음",
-                        modifier = Modifier
-                            .size(42.dp)
-                            .background(
-                                color = colorResource(id = com.reap.presentation.R.color.cement_2),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .clickable {
-                                navController.navigate(NavRoutes.Record.route)
-                                onDismiss()
-                            }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("녹음", style = MaterialTheme.typography.bodyMedium)
-                }
+@Composable
+private fun BottomSheetContent(navController: NavHostController, launcher: ActivityResultLauncher<String>, onDismiss: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        ActionButton(
+            iconRes = com.reap.presentation.R.drawable.ic_mike,
+            label = "녹음",
+            onClick = { navController.navigate(NavRoutes.Record.route); onDismiss() }
+        )
+        ActionButton(
+            iconRes = com.reap.presentation.R.drawable.ic_upload,
+            label = "업로드",
+            onClick = { launcher.launch("audio/*") }
+        )
+    }
+}
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        painter = painterResource(id = com.reap.presentation.R.drawable.ic_upload),
-                        contentDescription = "업로드",
-                        modifier = Modifier
-                            .size(42.dp)
-                            .background(
-                                color = colorResource(id = com.reap.presentation.R.color.cement_2),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .clickable { launcher.launch("audio/*") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("업로드", style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+@Composable
+private fun ActionButton(iconRes: Int, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = label,
+            modifier = Modifier
+                .size(42.dp)
+                .background(
+                    color = colorResource(id = com.reap.presentation.R.color.cement_2),
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .clickable { onClick() }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+    }
+}
 
-            when (uploadStatus) {
-                is UploadStatus.Uploading -> CircularProgressIndicator()
-                is UploadStatus.Success -> {
-                    Log.d("MainScreen", "Upload File, ID is ${(uploadStatus as UploadStatus.Success).fileId}")
-                    Toast.makeText(
-                        context,
-                        "파일 업로드에 성공하였습니다",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    LaunchedEffect(Unit) {
-                        delay(2000)
-                        onDismiss()
-                        mainViewModel.resetUploadSuccess()
-                    }
-                }
-                is UploadStatus.Error -> {
-                    Toast.makeText(
-                        context,
-                        "업로드에 실패했습니다, 잠시후 다시 시도해주세요.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.d("MainScreen", "Fail upload File, Err is ${(uploadStatus as UploadStatus.Error).message}")
-
-                    LaunchedEffect(Unit) {
-                        delay(2000)
-                        onDismiss()
-                        mainViewModel.resetUploadSuccess()
-                    }
-                }
-                else -> {}
+@Composable
+private fun UploadStatusContent(uploadStatus: UploadStatus, context: Context, onDismiss: () -> Unit, mainViewModel: MainViewModel) {
+    when (uploadStatus) {
+        is UploadStatus.Uploading -> CircularProgressIndicator()
+        is UploadStatus.Success -> {
+            Toast.makeText(context, "파일 업로드에 성공하였습니다", Toast.LENGTH_SHORT).show()
+            LaunchedEffect(Unit) {
+                delay(2000)
+                onDismiss()
+                mainViewModel.resetUploadSuccess()
             }
         }
+        is UploadStatus.Error -> {
+            Toast.makeText(context, "업로드에 실패했습니다, 잠시후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            LaunchedEffect(Unit) {
+                delay(2000)
+                onDismiss()
+                mainViewModel.resetUploadSuccess()
+            }
+        }
+
+        UploadStatus.Idle -> {}
     }
 }
 
@@ -473,23 +444,19 @@ private fun ShowSelectTopicModal(
     )
 }
 
-
 fun isValidAudioFile(context: Context, uri: Uri): Boolean {
     val contentResolver = context.contentResolver
     val mimeType = contentResolver.getType(uri)
-
+    var fileSize = 0L
     if (mimeType == null || !(mimeType.startsWith("audio/") || mimeType == "audio/mp4" || mimeType == "audio/x-m4a")) {
         return false
     }
 
-    // 파일 크기 검사 (예: 최대 10MB)
-    val fileSize = contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0
-    if (fileSize > 50 * 1024 * 1024) { // 50MB
-        return false
+    contentResolver.openFileDescriptor(uri, "r")?.use { parcelFileDescriptor ->
+        fileSize = parcelFileDescriptor.statSize
+    } ?: run {
+        fileSize = 0
     }
 
-    // 추가적인 안전성 검사를 여기에 구현 가능
-    // 예: 파일 헤더 검사, 악성코드 스캔 등
-
-    return true
+    return fileSize <= 50 * 1024 * 1024
 }
