@@ -15,12 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
-import com.reap.data.getNickname
 import com.reap.domain.model.RecordingDetail
 import com.reap.presentation.ui.home.calendar.CalendarCustom
 import com.reap.presentation.ui.main.MainViewModel
@@ -83,8 +81,8 @@ internal fun Home(
                 .padding(horizontal = sidePadding)
                 .verticalScroll(scrollState)
         ) {
-            val nickname = getNickname(LocalContext.current) ?: "Reap"
-            UserLabel(nickname, "")
+            val nickname = "Reap" //getNickname(LocalContext.current) ?: "Reap"
+            UserLabel(nickname, "Reap@Kakao.com")
 
             CalendarCustom(recordings, navController)
 
@@ -103,7 +101,6 @@ internal fun Home(
                 onItemClick = { date, recordingId ->
                     viewModel.fetchRecordingDetails(date, recordingId)
                 },
-                navController = navController,
             )
         }
     }
