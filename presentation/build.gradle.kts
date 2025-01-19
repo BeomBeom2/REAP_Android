@@ -36,7 +36,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-
     }
     packaging  {
         resources {
@@ -68,6 +67,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    hilt {
+        enableAggregatingTask = true
+    }
 }
 
 kapt {
@@ -83,7 +85,6 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
 
 
@@ -96,6 +97,7 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.kakao.user)
     implementation(libs.lottie.compose)
+    implementation(libs.accompanist.navigation.animation)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.ui.test.junit4)
