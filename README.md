@@ -47,7 +47,8 @@ REAP means Record Everything And Play, This is a project that allows you to rece
 - Upload a voice file and record the voice, then provide converted text
 - Displays dates with recorded files on a calendar
 - Ask questions based on text to speech
-   
+
+<!--
 ## Project Setup
 
 Add your  [Kakao Developers](https://developers.kakao.com/)  API keys as following properties into your  `local.properties`  file located in the root directory of the project:
@@ -59,4 +60,4 @@ KAKAO_REDIRECT_URI = "Your KAKAO_REDIRECT_URI "
 
 KAKAO_REST_API_KEY = "Your KAKAO_REST_API_KEY "
 ```
-
+-->
