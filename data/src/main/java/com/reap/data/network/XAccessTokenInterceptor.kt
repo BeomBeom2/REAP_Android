@@ -1,7 +1,7 @@
-package com.kust.kustaurant.data.di
+package com.reap.data.network
 
 import android.content.Context
-import com.reap.data.getAccessToken
+import com.reap.data.local.getAccessToken
 import okhttp3.Interceptor
 import okhttp3.Response
 

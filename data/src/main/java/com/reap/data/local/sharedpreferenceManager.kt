@@ -1,4 +1,4 @@
-package com.reap.data
+package com.reap.data.local
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity

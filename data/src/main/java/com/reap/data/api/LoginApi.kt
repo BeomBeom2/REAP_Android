@@ -1,4 +1,4 @@
-package com.reap.data.remote.api
+package com.reap.data.api
 
 import com.reap.domain.model.AccessTokenResponse
 import retrofit2.http.GET

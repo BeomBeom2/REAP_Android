@@ -1,4 +1,4 @@
-package com.reap.data.remote.api
+package com.reap.data.api
 
 import com.reap.data.model.QuestionResponse
 import com.reap.domain.model.QuestionRequest

@@ -1,9 +1,9 @@
-package com.kust.kustaurant.data.di
+package com.reap.data.network
 
 import android.content.Context
 import android.util.Log
-import com.reap.data.getAccessToken
-import com.reap.data.saveAccessToken
+import com.reap.data.local.getAccessToken
+import com.reap.data.local.saveAccessToken
 import okhttp3.Authenticator
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -14,7 +14,7 @@ import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 
-class TokenAuthenticator(private val context: Context) : Authenticator {
+class TokenInterceptor(private val context: Context) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         if (response.code == 401) {
             val token = getAccessToken(context)  // 기존 토큰 가져오기
